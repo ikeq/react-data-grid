@@ -101,11 +101,6 @@ export const cellFrozenEndClassname = `rdg-cell-frozen-end ${cellFrozenBase} ${c
 const cellRangeSelected = css`
   @layer rdg.Cell {
     background-color: var(--rdg-cell-selection-background-color);
-
-    @media (forced-colors: active) {
-      background-color: Highlight;
-      color: HighlightText;
-    }
   }
 `;
 
@@ -159,11 +154,6 @@ const headerCellRangeSelected = css`
   @layer rdg.HeaderCell {
     background-color: var(--rdg-header-selection-background-color);
     color: var(--rdg-header-selection-color);
-
-    @media (forced-colors: active) {
-      background-color: Highlight;
-      color: HighlightText;
-    }
   }
 `;
 

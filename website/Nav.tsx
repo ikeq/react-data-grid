@@ -40,13 +40,6 @@ const navClassname = css`
       &:hover {
         background-color: light-dark(hsl(210deg 50% 70%), hsl(210deg 50% 50%));
       }
-
-      @media (forced-colors: active) {
-        &,
-        &:hover {
-          background-color: SelectedItem;
-        }
-      }
     }
   }
 `;

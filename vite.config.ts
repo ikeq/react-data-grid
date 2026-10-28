@@ -46,13 +46,6 @@ async function dragFill({ page, iframe }: BrowserCommandContext, from: string, t
   await page.mouse.up();
 }
 
-async function emulateMedia(
-  { page }: BrowserCommandContext,
-  options: Parameters<BrowserCommandContext['page']['emulateMedia']>[0]
-) {
-  await page.emulateMedia(options);
-}
-
 // TODO: remove when vite-plus detects TypeScript 7.1 as TypeScript 7
 async function getTscPath(): Promise<string> {
   const { default: getExePath } = await import('./node_modules/typescript/lib/getExePath.js');
@@ -331,7 +324,7 @@ export default defineConfig({
       headless: true,
       ui: false,
       viewport,
-      commands: { resizeColumn, dragFill, emulateMedia },
+      commands: { resizeColumn, dragFill },
       expect: {
         toMatchScreenshot: {
           screenshotDirectory: 'screenshots'

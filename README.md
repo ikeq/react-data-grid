@@ -14,7 +14,7 @@ It is a fork of [react-data-grid](https://github.com/Comcast/react-data-grid), t
 - Sorting by one or multiple columns, from controls in header cells
 - Custom cell and header cell content
 - Keyboard navigation
-- Light and dark themes, and forced colors mode
+- Light and dark themes
 - Zebra stripes
 - No dependencies, with TypeScript types
 
