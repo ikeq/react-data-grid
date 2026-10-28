@@ -1,52 +1,105 @@
 import { page, userEvent } from 'vite-plus/test/browser';
 
-import { DataGrid } from '../../src';
-import type { Column } from '../../src';
-import { getCellsAtRowIndex, safeTab } from './utils';
+import { DataGrid, getSelectedCellsText, RowHeaderColumn } from '../../src';
+import type { Column, SelectedCells } from '../../src';
+import { getCellsAtRowIndex } from './utils';
 
 interface Row {
-  col: string;
+  a: string;
+  b: string | null;
 }
 
 const columns: readonly Column<Row>[] = [
-  {
-    key: 'col',
-    name: 'Col'
-  }
+  RowHeaderColumn,
+  { key: 'a', name: 'A' },
+  { key: 'b', name: 'B' }
 ];
 
 const rows: readonly Row[] = [
-  {
-    col: 'a1'
-  },
-  {
-    col: 'a2'
-  }
+  { a: 'a1', b: 'b1' },
+  { a: 'a2', b: null },
+  { a: 'a3', b: 'b3' }
 ];
 
-const onCellCopySpy = vi.fn();
-
-function setup() {
-  onCellCopySpy.mockClear();
-  return page.render(<DataGrid columns={columns} rows={rows} onCellCopy={onCellCopySpy} />);
+function spyOnCopiedText() {
+  const setData = vi.spyOn(DataTransfer.prototype, 'setData');
+  onTestFinished(() => {
+    setData.mockRestore();
+  });
+  return () => setData.mock.calls.findLast(([format]) => format === 'text/plain')?.[1];
 }
 
-test('should call onCellCopy on cell copy', async () => {
-  await setup();
-  await userEvent.click(getCellsAtRowIndex(1).nth(0));
+test('Ctrl/Cmd + C copies the selected cells as tab-separated text', async () => {
+  const getCopiedText = spyOnCopiedText();
+  await page.render(<DataGrid columns={columns} rows={rows} />);
+
+  await userEvent.click(getCellsAtRowIndex(0).nth(1));
+  await userEvent.keyboard('{Shift>}{ArrowDown}{ArrowRight}{/Shift}');
   await userEvent.copy();
-  expect(onCellCopySpy).toHaveBeenCalledExactlyOnceWith(
-    {
-      row: rows[1],
-      column: expect.objectContaining(columns[0])
-    },
-    expect.anything()
-  );
+  // empty values copy as empty cells
+  expect(getCopiedText()).toBe('a1\tb1\na2\t');
 });
 
-test('should not call onCellCopy on header cells', async () => {
-  await setup();
-  await safeTab();
+test('copying selected rows leaves out the row header column', async () => {
+  const getCopiedText = spyOnCopiedText();
+  await page.render(<DataGrid columns={columns} rows={rows} />);
+
+  await userEvent.click(getCellsAtRowIndex(2).nth(0));
   await userEvent.copy();
-  expect(onCellCopySpy).not.toHaveBeenCalled();
+  expect(getCopiedText()).toBe('a3\tb3');
+});
+
+test('nothing is copied without a selection', async () => {
+  const getCopiedText = spyOnCopiedText();
+  // the selection is controlled and stays empty, while the clicked cell becomes active
+  await page.render(<DataGrid columns={columns} rows={rows} cellSelection={[]} />);
+
+  await userEvent.click(getCellsAtRowIndex(0).nth(1));
+  await userEvent.copy();
+  expect(getCopiedText()).toBeUndefined();
+});
+
+test('controls in header cells copy their own text', async () => {
+  const getCopiedText = spyOnCopiedText();
+  const filterColumns: readonly Column<Row>[] = [
+    {
+      key: 'a',
+      name: 'A',
+      renderHeaderCell: ({ tabIndex }) => (
+        <input aria-label="filter" tabIndex={tabIndex} defaultValue="filter text" />
+      )
+    }
+  ];
+  await page.render(<DataGrid columns={filterColumns} rows={rows} />);
+
+  // select a cell, then copy from the input
+  await userEvent.click(getCellsAtRowIndex(0).nth(0));
+  await userEvent.tripleClick(page.getByRole('textbox', { name: 'filter' }));
+  await userEvent.copy();
+  expect(getCopiedText()).not.toBe('a1');
+});
+
+test('getSelectedCellsText', () => {
+  const calculatedColumns = [
+    { key: 'a', name: 'A' },
+    { key: 'b', name: 'B' }
+  ] as unknown as SelectedCells<Row>['columns'];
+  const range = { startIdx: 0, endIdx: 1, startRowIdx: 0, endRowIdx: 1 };
+  const selectedCells: SelectedCells<Row>[] = [
+    {
+      range,
+      columns: calculatedColumns,
+      rows: [
+        { a: 'tab\there', b: 'line\nbreak' },
+        { a: 'say "hi"', b: 'plain' }
+      ]
+    },
+    { range, columns: calculatedColumns.slice(1), rows: [{ a: '', b: 'second' }] }
+  ];
+
+  // values with tabs, line breaks, or quotes are quoted, ranges are separated by an empty line
+  expect(getSelectedCellsText(selectedCells)).toBe(
+    '"tab\there"\t"line\nbreak"\n"say ""hi"""\tplain\n\nsecond'
+  );
+  expect(getSelectedCellsText(selectedCells.slice(1), { includeHeader: true })).toBe('B\nsecond');
 });

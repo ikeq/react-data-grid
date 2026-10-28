@@ -177,8 +177,6 @@ export type CellMouseEvent = CellEvent<React.MouseEvent<HTMLDivElement>>;
 
 export type CellKeyboardEvent = CellEvent<React.KeyboardEvent<HTMLDivElement>>;
 
-export type CellClipboardEvent = React.ClipboardEvent<HTMLDivElement>;
-
 export interface CellMouseArgs<TRow> {
   /** The column object of the cell. */
   column: CalculatedColumn<TRow>;
@@ -238,13 +236,6 @@ export interface RenderRowProps<TRow> extends Omit<React.ComponentProps<'div'>, 
   onCellContextMenu: CellMouseEventHandler<TRow>;
   setActivePosition: (position: Position) => void;
 }
-
-interface CellCopyPasteArgs<TRow> {
-  column: CalculatedColumn<TRow>;
-  row: TRow;
-}
-
-export type CellCopyArgs<TRow> = CellCopyPasteArgs<TRow>;
 
 export interface SortColumn {
   readonly columnKey: string;

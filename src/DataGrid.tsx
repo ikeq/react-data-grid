@@ -19,6 +19,7 @@ import {
   classnames,
   createCellEvent,
   getCellToScroll,
+  getSelectedCellsText,
   getNextActivePosition,
   isCtrlKeyHeldDown,
   isElement,
@@ -27,8 +28,6 @@ import {
 } from './utils';
 import type {
   CalculatedColumn,
-  CellClipboardEvent,
-  CellCopyArgs,
   CellKeyboardEvent,
   CellKeyDownArgs,
   CellMouseEventHandler,
@@ -123,7 +122,8 @@ export interface DataGridProps<R, K extends Key = Key> extends SharedDivProps {
   /**
    * The cell selection works like in a spreadsheet:
    * click a cell, or drag over cells, to select a range, Shift + click or Shift + arrow keys to extend it, Ctrl/Cmd + click to add a range,
-   * click or drag over header cells to select columns, and over `RowHeaderColumn` cells to select rows.
+   * click or drag over header cells to select columns, and over `RowHeaderColumn` cells to select rows,
+   * and Ctrl/Cmd + C to copy the selected cells as tab-separated text.
    * The selected ranges, to control the cell selection. The grid manages it when `undefined`
    */
   cellSelection?: Maybe<CellSelection>;
@@ -150,8 +150,6 @@ export interface DataGridProps<R, K extends Key = Key> extends SharedDivProps {
   onCellDoubleClick?: CellMouseEventHandler<R>;
   /** Callback triggered when a key is pressed in a cell */
   onCellKeyDown?: Maybe<(args: CellKeyDownArgs<NoInfer<R>>, event: CellKeyboardEvent) => void>;
-  /** Callback triggered when a cell's content is copied */
-  onCellCopy?: Maybe<(args: CellCopyArgs<NoInfer<R>>, event: CellClipboardEvent) => void>;
   /** Function called whenever the active position is changed */
   onActivePositionChange?: Maybe<(args: PositionChangeArgs<NoInfer<R>>) => void>;
   /** Callback triggered when a column is resized */
@@ -212,7 +210,6 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
     onActivePositionChange,
     onScroll,
     onColumnResize,
-    onCellCopy,
     // Toggles and modes
     enableVirtualization: rawEnableVirtualization,
     // Miscellaneous
@@ -307,9 +304,7 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
     activePositionIsInActiveBounds,
     activePositionIsCellInViewport,
     validatePosition,
-    queryActiveColumn,
-    getActiveColumn,
-    getActiveRow
+    queryActiveColumn
   } = useActivePosition<R>({
     gridRef,
     columns,
@@ -337,6 +332,7 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
   });
 
   const {
+    cellSelection,
     isSelecting,
     selectedColumnIntervals,
     getRowSelectedRanges,
@@ -488,9 +484,19 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
     }
   }
 
-  function handleCellCopy(event: CellClipboardEvent) {
-    if (!activePositionIsCellInViewport) return;
-    onCellCopy?.({ row: getActiveRow(), column: getActiveColumn() }, event);
+  // Ctrl/Cmd + C copies the selected cells as tab-separated text, like in a spreadsheet
+  function handleCopy(event: React.ClipboardEvent<HTMLDivElement>) {
+    if (cellSelection.length === 0) return;
+    const { target } = event;
+    // let controls in the cells and header cells, like inputs, copy their own text
+    if (
+      isElement(target) &&
+      target.closest('input, textarea, select, [contenteditable]') !== null
+    ) {
+      return;
+    }
+    event.preventDefault();
+    event.clipboardData.setData('text/plain', getSelectedCellsText(getSelectedCells()));
   }
 
   function handleColumnResizeEnd() {
@@ -709,7 +715,7 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
       dir="ltr"
       onScroll={onScroll}
       onKeyDown={handleKeyDown}
-      onCopy={handleCellCopy}
+      onCopy={handleCopy}
       data-testid={testId}
       data-cy={dataCy}
     >

@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker';
 import { createFileRoute } from '@tanstack/react-router';
 import { css } from 'ecij';
 
-import { DataGrid, RowHeaderColumn } from '../../src';
+import { DataGrid, getSelectedCellsText, RowHeaderColumn } from '../../src';
 import type {
   CellSelection as CellSelectionValue,
   CellSelectionContextMenuArgs,
@@ -12,7 +12,7 @@ import type {
   SortColumn
 } from '../../src';
 import { ContextMenu, renderSortableHeaderCell, type ContextMenuItem } from '../components';
-import { compare, copySelectedCellsToClipboard, exportSelectedCellsToCsv } from '../utils';
+import { compare, exportSelectedCellsToCsv } from '../utils';
 
 export const Route = createFileRoute('/CellSelection')({
   component: CellSelection
@@ -127,10 +127,16 @@ function CellSelection() {
       items.push(null);
     }
     items.push(
-      { label: 'Copy', onSelect: () => copySelectedCellsToClipboard(selectedCells, false) },
+      {
+        label: 'Copy',
+        onSelect: () => navigator.clipboard.writeText(getSelectedCellsText(selectedCells))
+      },
       {
         label: 'Copy with Headers',
-        onSelect: () => copySelectedCellsToClipboard(selectedCells, true)
+        onSelect: () =>
+          navigator.clipboard.writeText(
+            getSelectedCellsText(selectedCells, { includeHeader: true })
+          )
       },
       {
         label: 'Export to CSV',
@@ -145,7 +151,8 @@ function CellSelection() {
         <span>
           Click or drag over cells, row numbers, or column headers to select them. Shift + click or
           Shift + arrow keys extend the selection, Ctrl/Cmd + click adds a range, and the top-left
-          cell or Ctrl/Cmd + A selects all. Right-click to copy, export, or sort.
+          cell or Ctrl/Cmd + A selects all. Ctrl/Cmd + C copies the selection. Right-click to copy,
+          export, or sort.
         </span>
         <output>
           {cellSelection.length} range(s), {countCells(cellSelection)} cell(s)

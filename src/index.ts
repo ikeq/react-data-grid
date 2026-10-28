@@ -10,10 +10,10 @@ export { RowHeaderColumn } from './RowHeaderColumn';
 export { ROW_HEADER_COLUMN_KEY } from './utils/cellSelectionUtils';
 export * from './cellRenderers';
 export { renderHeaderCell } from './renderHeaderCell';
+export { getSelectedCellsText, type GetSelectedCellsTextOptions } from './utils/copyUtils';
 export { renderSortIcon, renderSortPriority } from './sortStatus';
 export type {
   CalculatedColumn,
-  CellCopyArgs,
   CellKeyboardEvent,
   CellKeyDownArgs,
   CellMouseArgs,

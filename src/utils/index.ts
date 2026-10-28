@@ -2,6 +2,7 @@ import type { CalculatedColumn } from '../types';
 
 export * from './activePositionUtils';
 export * from './cellSelectionUtils';
+export * from './copyUtils';
 export * from './domUtils';
 export * from './eventUtils';
 export * from './keyboardUtils';

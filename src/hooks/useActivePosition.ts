@@ -57,21 +57,6 @@ export function useActivePosition<R>({
     return columns[resolvedActivePosition.idx];
   }
 
-  function getActiveColumn() {
-    const column = queryActiveColumn();
-    if (column === undefined) {
-      throw new Error('No column for active position');
-    }
-    return column;
-  }
-
-  function getActiveRow() {
-    if (!validatedPosition.isCellInViewport) {
-      throw new Error('No row for active position');
-    }
-    return rows[resolvedActivePosition.rowIdx];
-  }
-
   useLayoutEffect(() => {
     // Layout effects clean up when the component is replaced by a suspense fallback,
     // or when under <Activity mode="hidden">, then re-mount when the suspense boundary resolves,
@@ -92,8 +77,6 @@ export function useActivePosition<R>({
     activePositionIsInActiveBounds: validatedPosition.isCellInActiveBounds,
     activePositionIsCellInViewport: validatedPosition.isCellInViewport,
     validatePosition,
-    queryActiveColumn,
-    getActiveColumn,
-    getActiveRow
+    queryActiveColumn
   } as const;
 }

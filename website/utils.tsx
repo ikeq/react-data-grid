@@ -39,22 +39,6 @@ export function exportSelectedCellsToCsv<R>(
   downloadFile(fileName, new Blob([content], { type: 'text/csv;charset=utf-8;' }));
 }
 
-// tab-separated values paste into separate cells in spreadsheets
-export function copySelectedCellsToClipboard<R>(
-  selectedCells: readonly SelectedCells<R>[],
-  withHeader: boolean
-) {
-  const content = getSelectedCellsTables(selectedCells)
-    .map((table) =>
-      (withHeader ? table : table.slice(1))
-        .map((cells) => cells.map((cell) => cell.replaceAll(/[\t\n]/g, ' ')).join('\t'))
-        .join('\n')
-    )
-    .join('\n\n');
-
-  return navigator.clipboard.writeText(content);
-}
-
 function downloadFile(fileName: string, data: Blob) {
   const downloadLink = document.createElement('a');
   downloadLink.download = fileName;
