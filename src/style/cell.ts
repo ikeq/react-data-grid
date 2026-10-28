@@ -145,7 +145,7 @@ export const cellRangeEdgeClassname = `rdg-cell-range-edge ${cellRangeEdge}`;
 const rowHeaderCell = css`
   @layer rdg.Cell {
     background-color: var(--rdg-header-background-color);
-    color: var(--rdg-row-header-color);
+    color: var(--rdg-header-color);
     text-align: end;
     cursor: default;
     user-select: none;

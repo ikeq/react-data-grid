@@ -228,41 +228,41 @@ The grid follows `color-scheme`. Set it on `:root`, or add the `rdg-light` or `r
 <DataGrid className="rdg-dark" columns={columns} rows={rows} />
 ```
 
-In [forced colors mode](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/forced-colors), like Windows contrast themes, the selection uses system colors.
-
 ### CSS Variables
 
 ```css
 .rdg {
-  --rdg-font-size: 14px;
-  --rdg-color: light-dark(#000, #ddd);
+  --rdg-font-size: 12px;
+  /* the text of the data cells */
+  --rdg-color: light-dark(#888, #ddd);
   --rdg-background-color: light-dark(hsl(0deg 0% 100%), hsl(0deg 0% 13%));
 
-  /* the header, and the row numbers */
+  /* the header cells and the row numbers */
   --rdg-header-background-color: var(--rdg-background-color);
-  --rdg-row-header-color: light-dark(#666, #999);
+  --rdg-header-color: light-dark(#000, #fff);
 
   /* the lines below the header and next to the frozen columns */
   --rdg-border-width: 1px;
   --rdg-border-color: light-dark(#ddd, #444);
 
   /* rows */
-  --rdg-row-hover-background-color: light-dark(hsl(0deg 0% 96%), hsl(0deg 0% 9%));
+  /* the hovered data cell */
+  --rdg-cell-hover-background-color: light-dark(hsl(0deg 0% 96%), hsl(0deg 0% 9%));
   /* every other row, starting with the first row, set it to var(--rdg-background-color) to remove the stripes */
   --rdg-row-stripe-background-color: light-dark(hsl(0deg 0% 97.5%), hsl(0deg 0% 15%));
 
   /* the active cell */
   --rdg-selection-width: 1px;
-  --rdg-selection-color: hsl(207, 75%, 66%);
+  --rdg-selection-color: light-dark(#000, #fff);
 
   /* the selected cells, and the border around each range */
-  --rdg-cell-selection-background-color: light-dark(hsl(207deg 76% 92%), hsl(207deg 50% 26%));
+  --rdg-cell-selection-background-color: rgba(0, 0, 0, 0.05);
   --rdg-cell-selection-border-color: var(--rdg-selection-color);
   --rdg-cell-selection-border-width: var(--rdg-selection-width);
 
   /* the header cells of the selected columns, and the row numbers of the selected rows */
-  --rdg-header-selection-background-color: light-dark(hsl(207deg 45% 85%), hsl(207deg 35% 24%));
-  --rdg-header-selection-color: inherit;
+  --rdg-header-selection-background-color: var(--rdg-cell-hover-background-color);
+  --rdg-header-selection-color: var(--rdg-header-color);
 }
 ```
 

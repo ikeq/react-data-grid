@@ -42,6 +42,7 @@ const headerRow = css`
   @layer rdg.HeaderRow {
     display: contents;
     background-color: var(--rdg-header-background-color);
+    color: var(--rdg-header-color);
     font-weight: bold;
 
     & > .${cell} {

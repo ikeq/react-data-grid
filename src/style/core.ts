@@ -11,28 +11,24 @@ const root = css`
 
   @layer rdg.Root {
     --rdg-selection-width: 1px;
-    --rdg-selection-color: hsl(207, 75%, 66%);
-    --rdg-font-size: 14px;
+    --rdg-selection-color: light-dark(#000, #fff);
+    --rdg-font-size: 12px;
     --rdg-border-width: 1px;
-    --rdg-color: light-dark(#000, #ddd);
+    --rdg-color: light-dark(#888, #ddd);
     --rdg-border-color: light-dark(#ddd, #444);
     --rdg-background-color: light-dark(hsl(0deg 0% 100%), hsl(0deg 0% 13%));
     /* same as the data area, but opaque, as the header is sticky and the rows scroll under it */
     --rdg-header-background-color: var(--rdg-background-color);
-    --rdg-row-hover-background-color: light-dark(hsl(0deg 0% 96%), hsl(0deg 0% 9%));
+    --rdg-cell-hover-background-color: light-dark(hsl(0deg 0% 96%), hsl(0deg 0% 9%));
     /* the background of every other row, starting with the first row */
     --rdg-row-stripe-background-color: light-dark(hsl(0deg 0% 97.5%), hsl(0deg 0% 15%));
-    --rdg-cell-selection-background-color: light-dark(hsl(207deg 76% 92%), hsl(207deg 50% 26%));
+    --rdg-cell-selection-background-color: rgba(0, 0, 0, 0.05);
     --rdg-cell-selection-border-color: var(--rdg-selection-color);
     --rdg-cell-selection-border-width: var(--rdg-selection-width);
-    --rdg-header-selection-background-color: light-dark(hsl(207deg 45% 85%), hsl(207deg 35% 24%));
-    --rdg-header-selection-color: inherit;
-    --rdg-row-header-color: light-dark(#666, #999);
-
-    /* forced colors mode replaces non-system colors, which would hide the selection */
-    @media (forced-colors: active) {
-      --rdg-selection-color: CanvasText;
-    }
+    --rdg-header-selection-background-color: var(--rdg-cell-hover-background-color);
+    /* the text of the header cells and the row header cells */
+    --rdg-header-color: light-dark(#000, #fff);
+    --rdg-header-selection-color: var(--rdg-header-color);
 
     &.rdg-dark {
       color-scheme: dark;

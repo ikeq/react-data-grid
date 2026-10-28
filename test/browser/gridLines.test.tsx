@@ -116,3 +116,21 @@ test('only the line between the header and the data area is drawn', async () => 
   expect(getComputedStyle(headerCell).borderBlockEndWidth).toBe('1px');
   expect(getComputedStyle(dataCell).borderBlockEndWidth).toBe('0px');
 });
+
+test('only the hovered data cell is highlighted, not its row', async () => {
+  await page.render(<DataGrid columns={[RowHeaderColumn, ...columns]} rows={rows} />);
+  const row = page.getRow().nth(1).element();
+  const [rowHeaderCell, idCell, aCell] = row.querySelectorAll('[role="gridcell"]');
+  const rowBackground = getComputedStyle(row).backgroundColor;
+  const rowHeaderBackground = getComputedStyle(rowHeaderCell).backgroundColor;
+
+  await userEvent.hover(page.elementLocator(idCell));
+  await expect.poll(() => getComputedStyle(idCell).backgroundColor).not.toBe(rowBackground);
+  expect(getComputedStyle(row).backgroundColor).toBe(rowBackground);
+  expect(getComputedStyle(aCell).backgroundColor).toBe(rowBackground);
+
+  // the row numbers keep their background
+  await userEvent.hover(page.elementLocator(rowHeaderCell));
+  await expect.poll(() => getComputedStyle(idCell).backgroundColor).toBe(rowBackground);
+  expect(getComputedStyle(rowHeaderCell).backgroundColor).toBe(rowHeaderBackground);
+});

@@ -13,6 +13,8 @@ for (let i = 0; i < 50; i++) {
     key,
     name: key,
     frozen: i < 5,
+    // a fixed width, so the visible columns don't depend on the font size
+    width: 100,
     renderCell(props) {
       return `${props.column.key}×${props.row}`;
     }

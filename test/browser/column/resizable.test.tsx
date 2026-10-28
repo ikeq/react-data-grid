@@ -6,6 +6,10 @@ import { setup } from '../utils';
 
 const grid = page.getGrid();
 
+// the auto-sized widths below were measured with this font size in each browser,
+// the inline style overrides the default font size of the grid
+const measuredFontStyle: React.CSSProperties = { fontSize: 14 };
+
 interface Row {
   readonly col1: number;
   readonly col2: string;
@@ -187,7 +191,8 @@ test('should auto resize column when resize handle is double-clicked', async () 
         col2: 'a'.repeat(50)
       }
     ],
-    onColumnResize
+    onColumnResize,
+    style: measuredFontStyle
   });
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 200px' });
   await autoResize('col2');
@@ -272,7 +277,8 @@ test('should remeasure flex columns when resizing a column', async () => {
         col3: 'a'.repeat(10)
       }
     ],
-    onColumnResize
+    onColumnResize,
+    style: measuredFontStyle
   });
 
   await testGridTemplateColumns({
