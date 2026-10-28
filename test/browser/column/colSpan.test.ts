@@ -257,7 +257,9 @@ describe('colSpan', () => {
     colSpan.mockClear();
     await userEvent.keyboard('{arrowup}');
     await validateCellPosition(0, 0);
-    expect(colSpan).toHaveBeenCalledExactlyOnceWith({ type: 'HEADER' });
+    // moving to the header row also clears the cell selection, which re-renders the selected rows
+    expect(colSpan).toHaveBeenCalledWith({ type: 'HEADER' });
+    expect(colSpan).not.toHaveBeenCalledWith(undefined);
   });
 
   it('should scroll to the merged cell when selected', async () => {

@@ -19,7 +19,11 @@ export const cell = css`
     text-overflow: ellipsis;
     outline: none;
 
-    &[aria-selected='true']::before {
+    /*
+     * The active cell box is only drawn when the cell isn't in the cell selection, for example in summary rows:
+     * the selection draws the selected cells with its background and the border around each range.
+     */
+    &[aria-selected='true']:not(.rdg-cell-range-selected)::before {
       /* drawn on a pseudo element inside the cell, like the border around the selected ranges, so both line up */
       content: '';
       position: absolute;

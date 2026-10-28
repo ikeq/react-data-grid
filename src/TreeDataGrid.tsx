@@ -34,7 +34,6 @@ export interface TreeDataGridProps<R, SR = unknown, K extends Key = Key> extends
   | 'onFill'
   | 'isRowSelectionDisabled'
   // cell selection doesn't support group rows yet
-  | 'enableCellSelection'
   | 'cellSelection'
   | 'onCellSelectionChange'
   | 'onCellSelectionContextMenu'

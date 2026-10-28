@@ -84,13 +84,6 @@ export function clampCellSelection(
   return changed ? clamped : selection;
 }
 
-/** A single cell is the active cell's selection, so it isn't highlighted, like in a spreadsheet */
-export function isSingleCellSelection(selection: CellSelection) {
-  if (selection.length !== 1) return false;
-  const [range] = selection;
-  return range.startIdx === range.endIdx && range.startRowIdx === range.endRowIdx;
-}
-
 export function isPositionInCellSelection(selection: CellSelection, { idx, rowIdx }: Position) {
   return selection.some(
     (range) =>

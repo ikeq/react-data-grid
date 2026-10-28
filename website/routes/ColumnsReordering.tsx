@@ -2,6 +2,7 @@ import { startTransition, useCallback, useMemo, useState, ViewTransition } from 
 import { createFileRoute } from '@tanstack/react-router';
 
 import { DataGrid, type Column, type ColumnWidths, type SortColumn } from '../../src';
+import { renderSortableHeaderCell } from '../components';
 import { compare } from '../utils';
 import { useDirection } from '../directionContext';
 
@@ -48,6 +49,7 @@ const columns: Column<Row>[] = [
     name: 'Title',
     resizable: true,
     sortable: true,
+    renderHeaderCell: renderSortableHeaderCell,
     draggable: true
   },
   {
@@ -55,6 +57,7 @@ const columns: Column<Row>[] = [
     name: 'Priority',
     resizable: true,
     sortable: true,
+    renderHeaderCell: renderSortableHeaderCell,
     draggable: true
   },
   {
@@ -62,6 +65,7 @@ const columns: Column<Row>[] = [
     name: 'Issue Type',
     resizable: true,
     sortable: true,
+    renderHeaderCell: renderSortableHeaderCell,
     draggable: true
   },
   {
@@ -69,6 +73,7 @@ const columns: Column<Row>[] = [
     name: '% Complete',
     resizable: true,
     sortable: true,
+    renderHeaderCell: renderSortableHeaderCell,
     draggable: true
   }
 ];

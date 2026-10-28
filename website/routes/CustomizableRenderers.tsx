@@ -11,6 +11,7 @@ import type {
   RenderSortStatusProps,
   SortColumn
 } from '../../src';
+import { renderSortableHeaderCell } from '../components';
 import { compare } from '../utils';
 import { useDirection } from '../directionContext';
 
@@ -72,22 +73,26 @@ const columns: readonly Column<Row>[] = [
     key: 'task',
     name: 'Title',
     renderEditCell: renderTextEditor,
-    sortable: true
+    sortable: true,
+    renderHeaderCell: renderSortableHeaderCell
   },
   {
     key: 'priority',
     name: 'Priority',
-    sortable: true
+    sortable: true,
+    renderHeaderCell: renderSortableHeaderCell
   },
   {
     key: 'issueType',
     name: 'Issue Type',
-    sortable: true
+    sortable: true,
+    renderHeaderCell: renderSortableHeaderCell
   },
   {
     key: 'complete',
     name: '% Complete',
-    sortable: true
+    sortable: true,
+    renderHeaderCell: renderSortableHeaderCell
   }
 ];
 

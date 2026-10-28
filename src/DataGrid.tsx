@@ -178,19 +178,17 @@ export interface DataGridProps<R, SR = unknown, K extends Key = Key> extends Sha
   /** Default options applied to all columns */
   defaultColumnOptions?: Maybe<DefaultColumnOptions<NoInfer<R>, NoInfer<SR>>>;
   /**
-   * Enables spreadsheet-like cell selection:
-   * drag over cells to select a range, Shift + click or Shift + arrow keys to extend it, Ctrl/Cmd + click to add a range,
+   * The cell selection works like in a spreadsheet:
+   * click a cell, or drag over cells, to select a range, Shift + click or Shift + arrow keys to extend it, Ctrl/Cmd + click to add a range,
    * click or drag over header cells to select columns, and over `RowHeaderColumn` cells to select rows.
    * Clicking a header cell selects its column instead of sorting it.
-   * @default false
+   * The selected ranges, to control the cell selection. The grid manages it when `undefined`
    */
-  enableCellSelection?: Maybe<boolean>;
-  /** The selected ranges, to control the cell selection. The grid manages it when `undefined` */
   cellSelection?: Maybe<CellSelection>;
   /** Callback triggered when the cell selection changes */
   onCellSelectionChange?: Maybe<(cellSelection: CellSelection) => void>;
   /**
-   * Callback triggered when a cell, a row header cell, or a header cell is right-clicked, with `enableCellSelection`.
+   * Callback triggered when a cell, a row header cell, or a header cell is right-clicked.
    * Like in a spreadsheet, right-clicking outside of the selection first selects the cell, row, or column.
    * Call `event.preventDefault()` to replace the browser's context menu with your own.
    */
@@ -287,7 +285,6 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     sortColumns,
     onSortColumnsChange,
     defaultColumnOptions,
-    enableCellSelection: rawEnableCellSelection,
     cellSelection: rawCellSelection,
     onCellSelectionChange,
     onCellSelectionContextMenu,
@@ -340,7 +337,8 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     renderers?.renderCheckbox ?? contextRenderers?.renderCheckbox ?? defaultRenderCheckbox;
   const noRowsFallback = renderers?.noRowsFallback ?? contextRenderers?.noRowsFallback;
   const enableVirtualization = rawEnableVirtualization ?? true;
-  const enableCellSelection = rawEnableCellSelection ?? false;
+  // always enabled, except in `TreeDataGrid`, as group rows can't be selected yet
+  const enableCellSelection = role !== 'treegrid';
   const direction = rawDirection ?? 'ltr';
 
   /**

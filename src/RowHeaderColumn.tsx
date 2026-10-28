@@ -4,7 +4,7 @@ import { rowHeaderCellClassname } from './style/cell';
 
 /**
  * A start-frozen column that shows row numbers, like the row headers of a spreadsheet.
- * With `enableCellSelection`, clicking or dragging over its cells selects whole rows,
+ * Clicking or dragging over its cells selects whole rows,
  * and clicking its header cell selects all the cells.
  * Spread it to customize it, for example `{ ...RowHeaderColumn, width: 60 }`, but keep its `key`.
  */

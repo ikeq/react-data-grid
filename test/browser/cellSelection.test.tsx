@@ -64,7 +64,6 @@ async function setup(props: Partial<DataGridProps<Row>> = {}) {
     <DataGrid
       columns={columns}
       rows={initialRows}
-      enableCellSelection
       onCellSelectionChange={onCellSelectionChange}
       onSortColumnsChange={onSortColumnsChange}
       {...props}
@@ -73,12 +72,12 @@ async function setup(props: Partial<DataGridProps<Row>> = {}) {
   return { onCellSelectionChange, onSortColumnsChange };
 }
 
-test('cell selection is disabled by default', async () => {
+test('cell selection is always enabled', async () => {
   await page.render(<DataGrid columns={columns} rows={initialRows} />);
   await userEvent.click(getCell('a1'));
-  await clickWith('Shift', getCell('c3'));
-  await expect.element(selectedCells).toHaveLength(0);
-  await expect.element(page.getGrid()).not.toHaveAttribute('aria-multiselectable');
+  await clickWith('Shift', getCell('b2'));
+  await testSelectedCells(['a1', 'b1', 'a2', 'b2']);
+  await expect.element(page.getGrid()).toHaveAttribute('aria-multiselectable', 'true');
 });
 
 test('dragging selects a range of cells', async () => {
@@ -122,16 +121,17 @@ test('the border is drawn around each range', async () => {
   await testEdges('c5', ['top', 'bottom', 'end']);
   await expect.element(getRowHeaderCell(5)).not.toHaveClass('rdg-cell-range-edge');
 
-  // a single cell has no border, the active cell has its own outline
+  // a single cell has the border on every edge
   await userEvent.click(getCell('b7'));
-  await expect.element(page.getBySelector('.rdg-cell-range-edge')).toHaveLength(0);
+  await testEdges('b7', ['top', 'bottom', 'start', 'end']);
+  await expect.element(page.getBySelector('.rdg-cell-range-edge')).toHaveLength(1);
 });
 
 function getActiveBoxContent(element: Element) {
   return getComputedStyle(element, '::before').content;
 }
 
-test('the active cell box is only drawn in the data area', async () => {
+test('the active cell box is only drawn outside of the cell selection', async () => {
   await setup();
   const headerCell = page.getHeaderCell({ name: 'A' });
   await userEvent.click(headerCell);
@@ -142,9 +142,11 @@ test('the active cell box is only drawn in the data area', async () => {
   await expect.element(getRowHeaderCell(3)).toHaveAttribute('aria-selected', 'true');
   expect(getActiveBoxContent(getRowHeaderCell(3).element())).toBe('none');
 
+  // the cell selection draws the active cell with its background and border
   await userEvent.click(getCell('b1'));
   await expect.element(getCell('b1')).toHaveAttribute('aria-selected', 'true');
-  expect(getActiveBoxContent(getCell('b1').element())).not.toBe('none');
+  await expect.element(getCell('b1')).toHaveClass('rdg-cell-range-selected');
+  expect(getActiveBoxContent(getCell('b1').element())).toBe('none');
 
   // the box is a focus indicator when navigating to a header cell with the keyboard
   await userEvent.keyboard('{ArrowUp}{ArrowUp}');
@@ -153,14 +155,18 @@ test('the active cell box is only drawn in the data area', async () => {
   expect(getActiveBoxContent(focusedHeaderCell.element())).not.toBe('none');
 });
 
-test('a single cell is not highlighted', async () => {
+test('clicking a cell selects it, and highlights its row header cell and header cell', async () => {
   const { onCellSelectionChange } = await setup();
   await userEvent.click(getCell('b2'));
   expect(onCellSelectionChange).toHaveBeenLastCalledWith([
     { startIdx: 2, endIdx: 2, startRowIdx: 2, endRowIdx: 2 }
   ]);
-  await expect.element(selectedCells).toHaveLength(0);
-  await expect.element(selectedHeaderCells).toHaveLength(0);
+  await testSelectedCells(['b2']);
+  await expect.element(selectedHeaderCells).toHaveLength(2);
+  await expect
+    .element(page.getHeaderCell({ name: 'B' }))
+    .toHaveClass('rdg-header-cell-range-selected');
+  await expect.element(getRowHeaderCell(2)).toHaveClass('rdg-header-cell-range-selected');
 });
 
 test('Shift + click extends the selection, and Ctrl/Cmd + click adds a range', async () => {
@@ -175,7 +181,7 @@ test('Shift + click extends the selection, and Ctrl/Cmd + click adds a range', a
 
   // a click without modifiers starts a new selection
   await userEvent.click(getCell('c7'));
-  await expect.element(selectedCells).toHaveLength(0);
+  await testSelectedCells(['c7']);
 });
 
 test('Shift + arrow keys extend the selection, and arrow keys collapse it', async () => {
@@ -186,7 +192,7 @@ test('Shift + arrow keys extend the selection, and arrow keys collapse it', asyn
   await expect.element(page.getActiveCell()).toHaveTextContent('a1');
 
   await userEvent.keyboard('{ArrowDown}');
-  await expect.element(selectedCells).toHaveLength(0);
+  await testSelectedCells(['a2']);
   await expect.element(page.getActiveCell()).toHaveTextContent('a2');
 });
 
@@ -203,7 +209,7 @@ test('row header cells select whole rows', async () => {
   ]);
 });
 
-test('header cells select whole columns instead of sorting', async () => {
+test('header cells select whole columns, and do not sort', async () => {
   const { onCellSelectionChange, onSortColumnsChange } = await setup();
   const headerCell = page.getHeaderCell({ name: 'A' });
   await userEvent.click(headerCell);
@@ -219,9 +225,46 @@ test('header cells select whole columns instead of sorting', async () => {
     { startIdx: 1, endIdx: 3, startRowIdx: 0, endRowIdx: 9 }
   ]);
 
-  // the column can still be sorted with the keyboard
+  // nor with the keyboard
   await userEvent.keyboard('{ArrowLeft}{ArrowLeft}{Enter}');
-  expect(onSortColumnsChange).toHaveBeenCalledWith([{ columnKey: 'a', direction: 'ASC' }]);
+  expect(onSortColumnsChange).not.toHaveBeenCalled();
+});
+
+test('controls in header cells sort with onSort, without selecting the column', async () => {
+  const onSortColumnsChange = vi.fn<(sortColumns: SortColumn[]) => void>();
+  const sortableColumns: readonly Column<Row>[] = [
+    {
+      key: 'a',
+      name: 'A',
+      sortable: true,
+      renderHeaderCell({ column, sortDirection, onSort, tabIndex }) {
+        return (
+          <button type="button" tabIndex={tabIndex} onClick={onSort}>
+            Sort {column.name} {sortDirection}
+          </button>
+        );
+      }
+    },
+    { key: 'b', name: 'B', sortable: true }
+  ];
+  const { onCellSelectionChange } = await setup({
+    columns: sortableColumns,
+    onSortColumnsChange,
+    sortColumns: [{ columnKey: 'b', direction: 'ASC' }]
+  });
+  const button = page.getByRole('button', { name: 'Sort A' });
+
+  await userEvent.click(button);
+  expect(onSortColumnsChange).toHaveBeenLastCalledWith([{ columnKey: 'a', direction: 'ASC' }]);
+  expect(onCellSelectionChange).not.toHaveBeenCalled();
+  await expect.element(selectedCells).toHaveLength(0);
+
+  // Ctrl/Cmd + click adds the column to the sorted columns
+  await clickWith(ctrlKey, button);
+  expect(onSortColumnsChange).toHaveBeenLastCalledWith([
+    { columnKey: 'b', direction: 'ASC' },
+    { columnKey: 'a', direction: 'ASC' }
+  ]);
 });
 
 test('the row header column header cell and Ctrl/Cmd + A select all the cells', async () => {
@@ -296,7 +339,6 @@ test('controlled cell selection', async () => {
         <DataGrid
           columns={columns}
           rows={rows}
-          enableCellSelection
           cellSelection={cellSelection}
           onCellSelectionChange={setCellSelection}
         />

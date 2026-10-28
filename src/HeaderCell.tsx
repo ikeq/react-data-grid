@@ -11,17 +11,12 @@ import {
   getHeaderCellStyle,
   getLeftRightKey,
   isCtrlKeyHeldDown,
+  isElement,
   stopPropagation
 } from './utils';
-import type { CalculatedColumn, SortColumn } from './types';
+import type { CalculatedColumn, SortColumn, SortEvent } from './types';
 import type { HeaderRowProps } from './HeaderRow';
 import { headerCellRangeSelectedClassname } from './style/cell';
-
-const cellSortableClassname = css`
-  @layer rdg.HeaderCell {
-    cursor: pointer;
-  }
-`;
 
 const cellResizable = css`
   @layer rdg.HeaderCell {
@@ -130,12 +125,11 @@ export default function HeaderCell<R, SR>({
   const priority = sortColumn !== undefined && sortColumns!.length > 1 ? sortIndex! + 1 : undefined;
   const ariaSort =
     sortDirection && !priority ? (sortDirection === 'ASC' ? 'ascending' : 'descending') : undefined;
-  const { sortable, resizable, draggable } = column;
+  const { resizable, draggable } = column;
 
   const className = getCellClassname(
     column,
     column.headerCellClass,
-    sortable && cellSortableClassname,
     resizable && cellResizableClassname,
     draggable && cellDraggableClassname,
     isDragging && cellDraggingClassname,
@@ -143,8 +137,12 @@ export default function HeaderCell<R, SR>({
     isColumnSelected && headerCellRangeSelectedClassname
   );
 
-  function onSort(ctrlClick: boolean) {
-    if (onSortColumnsChange == null) return;
+  // Clicking the header cell selects the column, so sorting is triggered by controls rendered in the header cell,
+  // for example a sort button with `onClick={onSort}`, `onSort` being passed to `renderHeaderCell`
+  function onSort(event?: SortEvent) {
+    if (!column.sortable || onSortColumnsChange == null) return;
+    // Ctrl/Cmd + click adds the column to the sorted columns
+    const multiSort = event != null && (event.ctrlKey || event.metaKey);
     const { sortDescendingFirst } = column;
     if (sortColumn === undefined) {
       // not currently sorted
@@ -152,7 +150,7 @@ export default function HeaderCell<R, SR>({
         columnKey: column.key,
         direction: sortDescendingFirst ? 'DESC' : 'ASC'
       };
-      onSortColumnsChange(sortColumns && ctrlClick ? [...sortColumns, nextSort] : [nextSort]);
+      onSortColumnsChange(sortColumns && multiSort ? [...sortColumns, nextSort] : [nextSort]);
     } else {
       let nextSortColumn: SortColumn | undefined;
       if (
@@ -164,7 +162,7 @@ export default function HeaderCell<R, SR>({
           direction: sortDirection === 'ASC' ? 'DESC' : 'ASC'
         };
       }
-      if (ctrlClick) {
+      if (multiSort) {
         const nextSortColumns = [...sortColumns!];
         if (nextSortColumn) {
           // swap direction
@@ -190,16 +188,9 @@ export default function HeaderCell<R, SR>({
 
   function onMouseDown(event: React.MouseEvent<HTMLDivElement>) {
     setPosition({ idx: column.idx, rowIdx });
-    if (enableCellSelection) {
+    // controls rendered in the header cell, like a sort button, don't select the column
+    if (enableCellSelection && !isInteractiveTarget(event)) {
       onHeaderCellMouseDown(column, event);
-    }
-  }
-
-  function onClick(event: React.MouseEvent<HTMLSpanElement>) {
-    // with cell selection, clicking the header selects the column, like in a spreadsheet,
-    // and the column can still be sorted with Enter or Space, or with `onSortColumnsChange`
-    if (sortable && !enableCellSelection) {
-      onSort(event.ctrlKey || event.metaKey);
     }
   }
 
@@ -211,15 +202,7 @@ export default function HeaderCell<R, SR>({
 
   function onKeyDown(event: React.KeyboardEvent<HTMLSpanElement>) {
     const { key } = event;
-    if (sortable && (key === ' ' || key === 'Enter')) {
-      // prevent scrolling
-      event.preventDefault();
-      onSort(event.ctrlKey || event.metaKey);
-    } else if (
-      resizable &&
-      isCtrlKeyHeldDown(event) &&
-      (key === 'ArrowLeft' || key === 'ArrowRight')
-    ) {
+    if (resizable && isCtrlKeyHeldDown(event) && (key === 'ArrowLeft' || key === 'ArrowRight')) {
       // prevent navigation
       // TODO: check if we can use `preventDefault` instead
       event.stopPropagation();
@@ -302,7 +285,8 @@ export default function HeaderCell<R, SR>({
     column,
     sortDirection,
     priority,
-    tabIndex: childTabIndex
+    tabIndex: childTabIndex,
+    onSort
   });
 
   return (
@@ -328,7 +312,6 @@ export default function HeaderCell<R, SR>({
         style={style}
         onMouseDown={onMouseDown}
         onFocus={handleFocus}
-        onClick={onClick}
         onContextMenu={onContextMenu}
         onKeyDown={onKeyDown}
         onKeyUp={endKeyboardResize}
@@ -428,4 +411,12 @@ function isEventPertinent(event: React.DragEvent) {
   const relatedTarget = event.relatedTarget as HTMLElement | null;
 
   return !event.currentTarget.contains(relatedTarget);
+}
+
+// controls in the header cell handle their own clicks
+function isInteractiveTarget(event: React.MouseEvent<HTMLDivElement>) {
+  const { target, currentTarget } = event;
+  if (!isElement(target)) return false;
+  const control = target.closest('button, a[href], input, select, textarea, [role="button"]');
+  return control !== null && currentTarget.contains(control);
 }

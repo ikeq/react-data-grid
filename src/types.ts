@@ -234,9 +234,24 @@ export interface RenderEditCellContentProps<TRow, TSummaryRow = unknown> {
 
 export interface RenderHeaderCellContentProps<TRow, TSummaryRow = unknown> {
   column: CalculatedColumn<TRow, TSummaryRow>;
+  /** The sort direction of the column, from `sortColumns`, or `undefined` if it is not sorted */
   sortDirection: SortDirection | undefined;
+  /** The column's position in `sortColumns`, starting at 1, when sorting by multiple columns, or `undefined` otherwise */
   priority: number | undefined;
   tabIndex: number;
+  /**
+   * Sorts the column by calling `onSortColumnsChange`: ascending, then descending, then not sorted,
+   * or descending first with `sortDescendingFirst`. Does nothing if the column is not `sortable`.
+   * Clicking the header cell selects the column, so render a control that sorts, like `<button onClick={onSort}>`.
+   * With Ctrl/Cmd held, the column is added to the sorted columns instead of replacing them.
+   */
+  onSort: (event?: SortEvent) => void;
+}
+
+/** The modifier keys of the event that sorts a column, usually a click event */
+export interface SortEvent {
+  readonly ctrlKey: boolean;
+  readonly metaKey: boolean;
 }
 
 interface BaseRenderCellProps<TRow, TSummaryRow = unknown>

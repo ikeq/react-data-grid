@@ -14,6 +14,7 @@ import {
   type SortColumn
 } from '../../src';
 import { textEditorClassname } from '../../src/editors/renderTextEditor';
+import { renderSortableHeaderCell } from '../components';
 import {
   compare,
   exportToCsv,
@@ -405,6 +406,7 @@ function CommonFeatures() {
         rows={sortedRows}
         defaultColumnOptions={{
           sortable: true,
+          renderHeaderCell: renderSortableHeaderCell,
           resizable: true
         }}
         selectedRows={selectedRows}

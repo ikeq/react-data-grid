@@ -5,7 +5,7 @@ import { css } from 'ecij';
 
 import { DataGrid, RowHeaderColumn } from '../../src';
 import type { CellSelectionContextMenuArgs, Column, SelectedCells, SortColumn } from '../../src';
-import { ContextMenu, type ContextMenuItem } from '../components';
+import { renderSortableHeaderCell, ContextMenu, type ContextMenuItem } from '../components';
 import { compare, copySelectedCellsToClipboard, exportSelectedCellsToCsv } from '../utils';
 import { useDirection } from '../directionContext';
 
@@ -42,12 +42,42 @@ function createRows(): readonly Row[] {
 const columns: readonly Column<Row>[] = [
   // row numbers: click or drag to select rows, click its header cell to select all
   RowHeaderColumn,
-  { key: 'task', name: 'Task', width: 120, sortable: true },
-  { key: 'assignee', name: 'Assignee', sortable: true },
-  { key: 'priority', name: 'Priority', width: 110, sortable: true },
-  { key: 'status', name: 'Status', width: 120, sortable: true },
-  { key: 'progress', name: 'Progress', width: 100, sortable: true },
-  { key: 'dueDate', name: 'Due Date', width: 120, sortable: true }
+  {
+    key: 'task',
+    name: 'Task',
+    width: 120,
+    sortable: true,
+    renderHeaderCell: renderSortableHeaderCell
+  },
+  { key: 'assignee', name: 'Assignee', sortable: true, renderHeaderCell: renderSortableHeaderCell },
+  {
+    key: 'priority',
+    name: 'Priority',
+    width: 110,
+    sortable: true,
+    renderHeaderCell: renderSortableHeaderCell
+  },
+  {
+    key: 'status',
+    name: 'Status',
+    width: 120,
+    sortable: true,
+    renderHeaderCell: renderSortableHeaderCell
+  },
+  {
+    key: 'progress',
+    name: 'Progress',
+    width: 100,
+    sortable: true,
+    renderHeaderCell: renderSortableHeaderCell
+  },
+  {
+    key: 'dueDate',
+    name: 'Due Date',
+    width: 120,
+    sortable: true,
+    renderHeaderCell: renderSortableHeaderCell
+  }
 ];
 
 function rowKeyGetter(row: Row) {
@@ -134,7 +164,6 @@ function RowColumnSelection() {
         direction={direction}
         sortColumns={sortColumns}
         onSortColumnsChange={setSortColumns}
-        enableCellSelection
         onCellSelectionContextMenu={(args, event) => {
           event.preventDefault();
           setMenu({

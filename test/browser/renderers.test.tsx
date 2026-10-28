@@ -6,11 +6,13 @@ import {
   DataGrid,
   DataGridRenderersContext,
   Row as DefaultRow,
+  renderHeaderCell,
   renderSortIcon,
   SelectColumn
 } from '../../src';
 import type {
   Column,
+  RenderHeaderCellContentProps,
   DataGridProps,
   RenderCellProps,
   RenderRowProps,
@@ -27,17 +29,38 @@ interface Row {
 
 const noRows: readonly Row[] = [];
 
+// clicking the header cell selects the column, so the columns are sorted with a button
+function renderHeaderCellWithSortButton(props: RenderHeaderCellContentProps<Row>) {
+  return (
+    <>
+      {renderHeaderCell(props)}
+      <button type="button" onClick={props.onSort}>
+        Sort {props.column.name}
+      </button>
+    </>
+  );
+}
+
+// Ctrl + click opens the context menu on macOS, so multi-sort uses Cmd there
+const multiSortKey = navigator.platform.startsWith('Mac') ? 'Meta' : 'Control';
+
+function getSortButton(name: string) {
+  return page.getByRole('button', { name: `Sort ${name}` });
+}
+
 const columns: readonly Column<Row>[] = [
   SelectColumn,
   {
     key: 'col1',
     name: 'Column1',
-    sortable: true
+    sortable: true,
+    renderHeaderCell: renderHeaderCellWithSortButton
   },
   {
     key: 'col2',
     name: 'Column2',
-    sortable: true
+    sortable: true,
+    renderHeaderCell: renderHeaderCellWithSortButton
   }
 ];
 
@@ -189,11 +212,9 @@ test('checkbox defined using both context and renderers', async () => {
 test('sortPriority defined using context', async () => {
   await setupContext({ columns, rows: noRows });
 
-  const column1 = page.getHeaderCell({ name: 'Column1' });
-  const column2 = page.getHeaderCell({ name: 'Column2' });
-  await userEvent.click(column1);
-  await userEvent.keyboard('{Control>}');
-  await userEvent.click(column2);
+  await userEvent.click(getSortButton('Column1'));
+  await userEvent.keyboard(`{${multiSortKey}>}`);
+  await userEvent.click(getSortButton('Column2'));
 
   const p = page.getByTestId('global-sort-priority');
   await testCount(p, 2);
@@ -210,11 +231,9 @@ test('sortPriority defined using both context and renderers', async () => {
     renderers: { renderSortStatus: renderLocalSortStatus }
   });
 
-  const column1 = page.getHeaderCell({ name: 'Column1' });
-  const column2 = page.getHeaderCell({ name: 'Column2' });
-  await userEvent.click(column2);
-  await userEvent.keyboard('{Control>}');
-  await userEvent.click(column1);
+  await userEvent.click(getSortButton('Column2'));
+  await userEvent.keyboard(`{${multiSortKey}>}`);
+  await userEvent.click(getSortButton('Column1'));
 
   const p = page.getByTestId('local-sort-priority');
   await testCount(p, 2);

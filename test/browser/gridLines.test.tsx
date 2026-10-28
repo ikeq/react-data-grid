@@ -51,12 +51,12 @@ test('frozen columns have a single line at their edge, and no shadow', async () 
   expect(page.getGrid().element().querySelector('.rdg-frozen-column-shadow')).toBeNull();
 });
 
-test('the active cell box is 1px wide', async () => {
+test('the selection border is 1px wide', async () => {
   await page.render(<DataGrid columns={columns} rows={rows} />);
   const cell = page.getCell({ name: '1', exact: true });
   await userEvent.click(cell);
-  await expect.element(cell).toHaveAttribute('aria-selected', 'true');
-  expect(getComputedStyle(cell.element(), '::before').borderTopWidth).toBe('1px');
+  await expect.element(cell).toHaveClass('rdg-cell-range-edge');
+  expect(getComputedStyle(cell.element(), '::after').borderTopWidth).toBe('1px');
 });
 
 test('only the line between the header and the data area is drawn', async () => {

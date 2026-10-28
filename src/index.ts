@@ -62,5 +62,6 @@ export type {
   SelectRowEvent,
   SetActivePositionOptions,
   SortColumn,
-  SortDirection
+  SortDirection,
+  SortEvent
 } from './types';

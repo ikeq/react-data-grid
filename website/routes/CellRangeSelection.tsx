@@ -120,7 +120,6 @@ function CellRangeSelection() {
         rows={rows}
         className="fill-grid"
         direction={direction}
-        enableCellSelection
         cellSelection={cellSelection}
         onCellSelectionChange={setCellSelection}
         onCellSelectionContextMenu={(args, event) => {

@@ -12,7 +12,6 @@ import {
   isPositionInCellSelection,
   isRowInCellSelection,
   isSameCellRange,
-  isSingleCellSelection,
   ROW_HEADER_COLUMN_KEY,
   SelectedCellIntervalsCache,
   SelectedRowRangesCache
@@ -99,8 +98,7 @@ export function useCellSelection<R, SR>({
   const selection = enabled
     ? clampCellSelection(rawSelection ?? internalSelection, rows.length, columns.length)
     : emptyCellSelection;
-  // a single cell is the active cell, so it isn't highlighted
-  const isHighlighted = selection.length > 0 && !isSingleCellSelection(selection);
+  const isHighlighted = selection.length > 0;
 
   const handlePointerMoveLatest = useLatestFunc(handlePointerMove);
   const handlePointerUpLatest = useLatestFunc(stopSelecting);
