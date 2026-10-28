@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
 
 import { RowSelectionContext, type RowSelectionContextValue } from './hooks';
-import { classnames, intervalsOverlap, ROW_HEADER_COLUMN_KEY } from './utils';
+import { classnames, getCellSelectionEdges, ROW_HEADER_COLUMN_KEY } from './utils';
 import type { RenderRowProps } from './types';
 import { useRenderers } from './DataGridRenderersContext';
 import { rowClassname, rowActiveClassname } from './style/row';
@@ -14,7 +14,7 @@ function Row<R, SR>({
   isRowSelectionDisabled,
   isRowSelected,
   draggedOverCellIdx,
-  selectedCellIntervals,
+  selectedRowRanges,
   row,
   mapViewportColumns,
   activeCellEditor,
@@ -49,6 +49,7 @@ function Row<R, SR>({
         return activeCellEditor;
       }
 
+      const endIdx = column.idx + colSpan - 1;
       return renderCell(column.key, {
         column,
         colSpan,
@@ -57,10 +58,11 @@ function Row<R, SR>({
         isDraggedOver: draggedOverCellIdx === column.idx,
         isCellActive,
         isCellSelected:
-          selectedCellIntervals !== undefined &&
+          selectedRowRanges !== undefined &&
           // the row header cell is highlighted when any cell of the row is selected
           (column.key === ROW_HEADER_COLUMN_KEY ||
-            intervalsOverlap(selectedCellIntervals, column.idx, column.idx + colSpan - 1)),
+            selectedRowRanges.some(([start, end]) => column.idx <= end && endIdx >= start)),
+        cellSelectionEdges: getCellSelectionEdges(selectedRowRanges, column.idx, endIdx),
         onCellMouseDown,
         onCellClick,
         onCellDoubleClick,

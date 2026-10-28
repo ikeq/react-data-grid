@@ -513,7 +513,7 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
   const {
     isSelecting,
     selectedColumnIntervals,
-    getRowSelectedIntervals,
+    getRowSelectedRanges,
     getSelectedCells,
     setCellSelection,
     selectAll,
@@ -1284,7 +1284,7 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
       gridRowStart,
       activeCellIdx: isActiveRow ? activeIdx : undefined,
       draggedOverCellIdx: getDraggedOverCellIdx(rowIdx),
-      selectedCellIntervals: getRowSelectedIntervals(rowIdx),
+      selectedRowRanges: getRowSelectedRanges(rowIdx),
       onRowChange: updateRowLatest,
       setActivePosition: setPositionLatest,
       activeCellEditor: getCellEditor(rowIdx),

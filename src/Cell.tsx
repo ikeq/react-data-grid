@@ -3,6 +3,10 @@ import { css } from 'ecij';
 
 import { useRovingTabIndex } from './hooks';
 import {
+  CELL_SELECTION_EDGE_BOTTOM,
+  CELL_SELECTION_EDGE_END,
+  CELL_SELECTION_EDGE_START,
+  CELL_SELECTION_EDGE_TOP,
   createCellEvent,
   getCellClassname,
   getCellStyle,
@@ -11,7 +15,11 @@ import {
   ROW_HEADER_COLUMN_KEY
 } from './utils';
 import type { CellMouseEventHandler, RenderCellProps } from './types';
-import { cellRangeSelectedClassname, headerCellRangeSelectedClassname } from './style/cell';
+import {
+  cellRangeEdgeClassname,
+  cellRangeSelectedClassname,
+  headerCellRangeSelectedClassname
+} from './style/cell';
 
 const cellDraggedOver = css`
   @layer rdg.Cell {
@@ -30,6 +38,7 @@ function Cell<R, SR>({
   colSpan,
   isCellActive,
   isCellSelected = false,
+  cellSelectionEdges = 0,
   isDraggedOver,
   row,
   rowIdx,
@@ -62,6 +71,11 @@ function Cell<R, SR>({
     column,
     isDraggedOver && cellDraggedOverClassname,
     selectedClassname,
+    cellSelectionEdges !== 0 && cellRangeEdgeClassname,
+    (cellSelectionEdges & CELL_SELECTION_EDGE_TOP) !== 0 && 'rdg-cell-range-edge-top',
+    (cellSelectionEdges & CELL_SELECTION_EDGE_BOTTOM) !== 0 && 'rdg-cell-range-edge-bottom',
+    (cellSelectionEdges & CELL_SELECTION_EDGE_START) !== 0 && 'rdg-cell-range-edge-start',
+    (cellSelectionEdges & CELL_SELECTION_EDGE_END) !== 0 && 'rdg-cell-range-edge-end',
     typeof cellClass === 'function' ? cellClass(row) : cellClass,
     className
   );

@@ -21,9 +21,28 @@ export const cell = css`
     text-overflow: ellipsis;
     outline: none;
 
-    &[aria-selected='true'] {
-      outline: var(--rdg-selection-width) solid var(--rdg-selection-color);
-      outline-offset: calc(var(--rdg-selection-width) * -1);
+    &[aria-selected='true']::before {
+      /*
+       * Drawn inside the cell's grid lines on every side, like the border around the selected ranges.
+       * An outline would cover the cell's own end and bottom borders, but not the start and top grid lines,
+       * which belong to the previous cells, so the outline would not be symmetric.
+       */
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border: var(--rdg-selection-width) solid var(--rdg-selection-color);
+    }
+
+    /*
+     * Header cells and row header cells are highlighted with their background when selected,
+     * so the box is only drawn in the data area. It still shows when they are focused with the keyboard,
+     * otherwise there would be no focus indicator.
+     */
+    &[aria-selected='true']:is([role='columnheader'], .rdg-row-header-cell):not(
+        :focus-visible
+      )::before {
+      content: none;
     }
   }
 `;
@@ -88,6 +107,37 @@ const cellRangeSelected = css`
 `;
 
 export const cellRangeSelectedClassname = `rdg-cell-range-selected ${cellRangeSelected}`;
+
+// draws the border around each selected range, on the edges that the cell is on
+const cellRangeEdge = css`
+  @layer rdg.Cell {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border: 0 solid var(--rdg-cell-selection-border-color);
+    }
+
+    &.rdg-cell-range-edge-top::after {
+      border-block-start-width: var(--rdg-cell-selection-border-width);
+    }
+
+    &.rdg-cell-range-edge-bottom::after {
+      border-block-end-width: var(--rdg-cell-selection-border-width);
+    }
+
+    &.rdg-cell-range-edge-start::after {
+      border-inline-start-width: var(--rdg-cell-selection-border-width);
+    }
+
+    &.rdg-cell-range-edge-end::after {
+      border-inline-end-width: var(--rdg-cell-selection-border-width);
+    }
+  }
+`;
+
+export const cellRangeEdgeClassname = `rdg-cell-range-edge ${cellRangeEdge}`;
 
 const rowHeaderCell = css`
   @layer rdg.Cell {

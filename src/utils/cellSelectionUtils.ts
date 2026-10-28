@@ -1,4 +1,10 @@
-import type { CellRange, CellSelection, Position, SelectedCellIntervals } from '../types';
+import type {
+  CellRange,
+  CellSelection,
+  Position,
+  SelectedCellIntervals,
+  SelectedRowRanges
+} from '../types';
 
 export const ROW_HEADER_COLUMN_KEY = 'rdg-row-header-column';
 
@@ -153,18 +159,72 @@ export class SelectedCellIntervalsCache {
   }
 }
 
-export function getRowSelectedCellIntervals(
+export const CELL_SELECTION_EDGE_TOP = 1;
+export const CELL_SELECTION_EDGE_BOTTOM = 2;
+export const CELL_SELECTION_EDGE_START = 4;
+export const CELL_SELECTION_EDGE_END = 8;
+
+type MutableSelectedRowRange = [
+  startIdx: number,
+  endIdx: number,
+  isFirstRow: boolean,
+  isLastRow: boolean
+];
+
+/** Caches the row ranges by their content, like `SelectedCellIntervalsCache` */
+export class SelectedRowRangesCache {
+  readonly #cache = new Map<string, SelectedRowRanges>();
+
+  get(ranges: MutableSelectedRowRange[]): SelectedRowRanges | undefined {
+    if (ranges.length === 0) return;
+    const key = ranges.map((range) => range.join(',')).join(';');
+    let cached = this.#cache.get(key);
+    if (cached === undefined) {
+      if (this.#cache.size > 1000) this.#cache.clear();
+      cached = ranges;
+      this.#cache.set(key, cached);
+    }
+    return cached;
+  }
+}
+
+/**
+ * Returns the parts of the ranges that cross the row.
+ * The row header and select columns at the start of a range are skipped, so the border starts at the first data column.
+ */
+export function getSelectedRowRanges(
   selection: CellSelection,
   rowIdx: number,
-  cache: SelectedCellIntervalsCache
+  isUtilityColumn: (idx: number) => boolean,
+  cache: SelectedRowRangesCache
 ) {
-  const intervals: [number, number][] = [];
+  const ranges: MutableSelectedRowRange[] = [];
   for (const range of selection) {
-    if (rowIdx >= range.startRowIdx && rowIdx <= range.endRowIdx) {
-      intervals.push([range.startIdx, range.endIdx]);
-    }
+    if (rowIdx < range.startRowIdx || rowIdx > range.endRowIdx) continue;
+    let { startIdx } = range;
+    while (startIdx <= range.endIdx && isUtilityColumn(startIdx)) startIdx++;
+    if (startIdx > range.endIdx) continue;
+    ranges.push([startIdx, range.endIdx, rowIdx === range.startRowIdx, rowIdx === range.endRowIdx]);
   }
-  return cache.get(intervals);
+  return cache.get(ranges);
+}
+
+/** Returns the `CELL_SELECTION_EDGE_*` bitmask of the cell spanning `[startIdx, endIdx]` */
+export function getCellSelectionEdges(
+  ranges: SelectedRowRanges | undefined,
+  startIdx: number,
+  endIdx: number
+) {
+  let edges = 0;
+  if (ranges === undefined) return edges;
+  for (const [rangeStartIdx, rangeEndIdx, isFirstRow, isLastRow] of ranges) {
+    if (startIdx > rangeEndIdx || endIdx < rangeStartIdx) continue;
+    if (isFirstRow) edges |= CELL_SELECTION_EDGE_TOP;
+    if (isLastRow) edges |= CELL_SELECTION_EDGE_BOTTOM;
+    if (rangeStartIdx >= startIdx) edges |= CELL_SELECTION_EDGE_START;
+    if (rangeEndIdx <= endIdx) edges |= CELL_SELECTION_EDGE_END;
+  }
+  return edges;
 }
 
 export function getSelectedColumnIntervals(

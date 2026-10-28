@@ -167,6 +167,18 @@ export type CellSelection = readonly CellRange[];
 /** Selected columns of a single row: inclusive `[startIdx, endIdx]` column index intervals */
 export type SelectedCellIntervals = readonly (readonly [startIdx: number, endIdx: number])[];
 
+/**
+ * The parts of the selected ranges that cross a single row, one per range:
+ * the inclusive column interval, and whether the row is the first or last row of the range.
+ * Used to highlight the selected cells, and the border around each range.
+ */
+export type SelectedRowRanges = readonly (readonly [
+  startIdx: number,
+  endIdx: number,
+  isFirstRow: boolean,
+  isLastRow: boolean
+])[];
+
 export interface SelectedCells<TRow, TSummaryRow = unknown> {
   /** The range that the cells come from */
   readonly range: CellRange;
@@ -246,6 +258,11 @@ export interface RenderCellProps<TRow, TSummaryRow> extends BaseRenderCellProps<
   isCellActive: boolean;
   /** Whether the cell is in the cell selection. For the row header column, whether any cell of the row is selected */
   isCellSelected?: boolean;
+  /**
+   * The edges of the selected ranges that the cell is on, to draw the border around each range.
+   * A bitmask of `1` for the top edge, `2` for the bottom edge, `4` for the inline start edge, and `8` for the inline end edge
+   */
+  cellSelectionEdges?: number;
   onRowChange: (column: CalculatedColumn<TRow, TSummaryRow>, rowIdx: number, newRow: TRow) => void;
 }
 
@@ -364,10 +381,10 @@ export interface RenderRowProps<TRow, TSummaryRow = unknown> extends BaseRenderR
   row: TRow;
   draggedOverCellIdx: number | undefined;
   /**
-   * The selected column intervals of the row, `undefined` when none of its cells are selected.
+   * The parts of the selected ranges that cross the row, `undefined` when none of its cells are selected.
    * The array keeps its identity while the row's selection doesn't change, so memoized rows don't re-render.
    */
-  selectedCellIntervals?: SelectedCellIntervals | undefined;
+  selectedRowRanges?: SelectedRowRanges | undefined;
   activeCellEditor: ReactElement<EditCellProps<TRow, TSummaryRow>> | undefined;
   onRowChange: (column: CalculatedColumn<TRow, TSummaryRow>, rowIdx: number, newRow: TRow) => void;
   rowClass: Maybe<(row: TRow, rowIdx: number) => Maybe<string>>;

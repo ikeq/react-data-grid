@@ -4,8 +4,8 @@ import {
   clampCellSelection,
   emptyCellSelection,
   getCellRange,
-  getRowSelectedCellIntervals,
   getSelectedColumnIntervals,
+  getSelectedRowRanges,
   isCellSelectionUtilityColumn,
   isColumnInCellSelection,
   isElement,
@@ -14,7 +14,8 @@ import {
   isSameCellRange,
   isSingleCellSelection,
   ROW_HEADER_COLUMN_KEY,
-  SelectedCellIntervalsCache
+  SelectedCellIntervalsCache,
+  SelectedRowRangesCache
 } from '../utils';
 import type {
   CalculatedColumn,
@@ -90,6 +91,7 @@ export function useCellSelection<R, SR>({
   // the other corner of the last range, moved by Shift + arrow keys
   const leadRef = useRef<Position | null>(null);
   const [intervalsCache] = useState(() => new SelectedCellIntervalsCache());
+  const [rowRangesCache] = useState(() => new SelectedRowRangesCache());
 
   const isControlled = rawSelection != null;
   const maxIdx = columns.length - 1;
@@ -499,9 +501,13 @@ export function useCellSelection<R, SR>({
   /**
    * rendering
    */
-  function getRowSelectedIntervals(rowIdx: number) {
+  function isUtilityColumn(idx: number) {
+    return isCellSelectionUtilityColumn(columns[idx].key);
+  }
+
+  function getRowSelectedRanges(rowIdx: number) {
     if (!isHighlighted) return;
-    return getRowSelectedCellIntervals(selection, rowIdx, intervalsCache);
+    return getSelectedRowRanges(selection, rowIdx, isUtilityColumn, rowRangesCache);
   }
 
   const selectedColumnIntervals = isHighlighted
@@ -512,7 +518,7 @@ export function useCellSelection<R, SR>({
     cellSelection: selection,
     isSelecting,
     selectedColumnIntervals,
-    getRowSelectedIntervals,
+    getRowSelectedRanges,
     getSelectedCells,
     setCellSelection: setSelection,
     selectAll,

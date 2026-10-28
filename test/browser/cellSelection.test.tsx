@@ -94,6 +94,65 @@ test('dragging selects a range of cells', async () => {
   await expect.element(selectedHeaderCells).toHaveLength(5);
 });
 
+async function testEdges(name: string, edges: readonly ('top' | 'bottom' | 'start' | 'end')[]) {
+  const cell = getCell(name);
+  for (const edge of ['top', 'bottom', 'start', 'end'] as const) {
+    if (edges.includes(edge)) {
+      await expect.element(cell).toHaveClass(`rdg-cell-range-edge-${edge}`);
+    } else {
+      await expect.element(cell).not.toHaveClass(`rdg-cell-range-edge-${edge}`);
+    }
+  }
+}
+
+test('the border is drawn around each range', async () => {
+  await setup();
+  await userEvent.dragAndDrop(getCell('a1'), getCell('c3'));
+  await testEdges('a1', ['top', 'start']);
+  await testEdges('b1', ['top']);
+  await testEdges('c1', ['top', 'end']);
+  await testEdges('a2', ['start']);
+  await testEdges('b2', []);
+  await expect.element(getCell('b2')).not.toHaveClass('rdg-cell-range-edge');
+  await testEdges('c3', ['bottom', 'end']);
+
+  // the border of a range of rows starts after the row header column
+  await userEvent.click(getRowHeaderCell(5));
+  await testEdges('a5', ['top', 'bottom', 'start']);
+  await testEdges('c5', ['top', 'bottom', 'end']);
+  await expect.element(getRowHeaderCell(5)).not.toHaveClass('rdg-cell-range-edge');
+
+  // a single cell has no border, the active cell has its own outline
+  await userEvent.click(getCell('b7'));
+  await expect.element(page.getBySelector('.rdg-cell-range-edge')).toHaveLength(0);
+});
+
+function getActiveBoxContent(element: Element) {
+  return getComputedStyle(element, '::before').content;
+}
+
+test('the active cell box is only drawn in the data area', async () => {
+  await setup();
+  const headerCell = page.getHeaderCell({ name: 'A' });
+  await userEvent.click(headerCell);
+  await expect.element(headerCell).toHaveAttribute('aria-selected', 'true');
+  expect(getActiveBoxContent(headerCell.element())).toBe('none');
+
+  await userEvent.click(getRowHeaderCell(3));
+  await expect.element(getRowHeaderCell(3)).toHaveAttribute('aria-selected', 'true');
+  expect(getActiveBoxContent(getRowHeaderCell(3).element())).toBe('none');
+
+  await userEvent.click(getCell('b1'));
+  await expect.element(getCell('b1')).toHaveAttribute('aria-selected', 'true');
+  expect(getActiveBoxContent(getCell('b1').element())).not.toBe('none');
+
+  // the box is a focus indicator when navigating to a header cell with the keyboard
+  await userEvent.keyboard('{ArrowUp}{ArrowUp}');
+  const focusedHeaderCell = page.getHeaderCell({ name: 'B' });
+  await expect.element(focusedHeaderCell).toHaveAttribute('aria-selected', 'true');
+  expect(getActiveBoxContent(focusedHeaderCell.element())).not.toBe('none');
+});
+
 test('a single cell is not highlighted', async () => {
   const { onCellSelectionChange } = await setup();
   await userEvent.click(getCell('b2'));

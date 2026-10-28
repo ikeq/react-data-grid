@@ -56,6 +56,7 @@ export type {
   RowHeightArgs,
   RowsChangeData,
   SelectedCellIntervals,
+  SelectedRowRanges,
   SelectedCells,
   SelectHeaderRowEvent,
   SelectRowEvent,

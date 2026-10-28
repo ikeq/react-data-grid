@@ -445,7 +445,7 @@ export function TreeDataGrid<R, SR = unknown, K extends Key = Key>({
       onCellContextMenu,
       onRowChange,
       draggedOverCellIdx,
-      selectedCellIntervals,
+      selectedRowRanges,
       activeCellEditor,
       isRowSelectionDisabled,
       isTreeGrid,
@@ -491,7 +491,7 @@ export function TreeDataGrid<R, SR = unknown, K extends Key = Key>({
       onCellContextMenu,
       onRowChange,
       draggedOverCellIdx,
-      selectedCellIntervals,
+      selectedRowRanges,
       activeCellEditor,
       isRowSelectionDisabled,
       isTreeGrid

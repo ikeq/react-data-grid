@@ -30,6 +30,8 @@ const root = css`
     --rdg-checkbox-focus-color: hsl(207deg 100% 69%);
     --rdg-frozen-column-shadow-color: light-dark(rgb(0 0 0 / 15%), rgb(0 0 0 / 40%));
     --rdg-cell-selection-background-color: light-dark(hsl(207deg 76% 92%), hsl(207deg 50% 26%));
+    --rdg-cell-selection-border-color: var(--rdg-selection-color);
+    --rdg-cell-selection-border-width: var(--rdg-selection-width);
     --rdg-header-selection-background-color: light-dark(hsl(207deg 45% 85%), hsl(207deg 35% 24%));
     --rdg-header-selection-color: inherit;
     --rdg-row-header-color: light-dark(#666, #999);
