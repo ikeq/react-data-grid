@@ -18,7 +18,7 @@ import {
   headerCellRangeSelectedClassname
 } from './style/cell';
 
-function Cell<R, SR>({
+function Cell<R>({
   column,
   isCellActive,
   isCellSelected,
@@ -37,7 +37,7 @@ function Cell<R, SR>({
   setActivePosition,
   style,
   ...props
-}: RenderCellProps<R, SR>) {
+}: RenderCellProps<R>) {
   const { tabIndex, childTabIndex, onFocus } = useRovingTabIndex(isCellActive);
 
   const { cellClass } = column;
@@ -62,7 +62,7 @@ function Cell<R, SR>({
 
   function handleMouseEvent(
     event: React.MouseEvent<HTMLDivElement>,
-    eventHandler: CellMouseEventHandler<R, SR>
+    eventHandler: CellMouseEventHandler<R>
   ) {
     let eventHandled = false;
     if (eventHandler) {
@@ -124,4 +124,4 @@ function Cell<R, SR>({
   );
 }
 
-export default memo(Cell) as <R, SR>(props: RenderCellProps<R, SR>) => React.JSX.Element;
+export default memo(Cell) as <R>(props: RenderCellProps<R>) => React.JSX.Element;

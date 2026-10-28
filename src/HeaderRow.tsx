@@ -14,14 +14,14 @@ import type { DataGridProps } from './DataGrid';
 import HeaderCell from './HeaderCell';
 import { cell, cellFrozenBase, rowHeaderCornerCellClassname } from './style/cell';
 
-type SharedDataGridProps<R, SR, K extends React.Key> = Pick<
-  DataGridProps<R, SR, K>,
+type SharedDataGridProps<R, K extends React.Key> = Pick<
+  DataGridProps<R, K>,
   'sortColumns' | 'onSortColumnsChange'
 >;
 
-export interface HeaderRowProps<R, SR, K extends React.Key> extends SharedDataGridProps<R, SR, K> {
-  mapViewportColumns: MapViewportColumns<R, SR>;
-  onColumnResize: (column: CalculatedColumn<R, SR>, width: ResizedWidth) => void;
+export interface HeaderRowProps<R, K extends React.Key> extends SharedDataGridProps<R, K> {
+  mapViewportColumns: MapViewportColumns<R>;
+  onColumnResize: (column: CalculatedColumn<R>, width: ResizedWidth) => void;
   onColumnResizeEnd: () => void;
   activeCellIdx: number | undefined;
   setPosition: (position: Position) => void;
@@ -29,11 +29,11 @@ export interface HeaderRowProps<R, SR, K extends React.Key> extends SharedDataGr
   headerRowClass: Maybe<string>;
   selectedColumnIntervals: SelectedCellIntervals | undefined;
   onHeaderCellMouseDown: (
-    column: CalculatedColumn<R, SR>,
+    column: CalculatedColumn<R>,
     event: React.MouseEvent<HTMLDivElement>
   ) => void;
   onHeaderCellContextMenu: (
-    column: CalculatedColumn<R, SR>,
+    column: CalculatedColumn<R>,
     event: React.MouseEvent<HTMLDivElement>
   ) => void;
 }
@@ -66,7 +66,7 @@ const headerRow = css`
 
 export const headerRowClassname = `rdg-header-row ${headerRow}`;
 
-function HeaderRow<R, SR, K extends React.Key>({
+function HeaderRow<R, K extends React.Key>({
   headerRowClass,
   mapViewportColumns,
   onColumnResize,
@@ -79,9 +79,9 @@ function HeaderRow<R, SR, K extends React.Key>({
   selectedColumnIntervals,
   onHeaderCellMouseDown,
   onHeaderCellContextMenu
-}: HeaderRowProps<R, SR, K>) {
+}: HeaderRowProps<R, K>) {
   const cells = mapViewportColumns(activeCellIdx, (column, isCellActive, index) => (
-    <HeaderCell<R, SR>
+    <HeaderCell<R>
       key={column.key}
       column={column}
       isCellActive={isCellActive}
@@ -111,6 +111,6 @@ function HeaderRow<R, SR, K extends React.Key>({
   );
 }
 
-export default memo(HeaderRow) as <R, SR, K extends React.Key>(
-  props: HeaderRowProps<R, SR, K>
+export default memo(HeaderRow) as <R, K extends React.Key>(
+  props: HeaderRowProps<R, K>
 ) => React.JSX.Element;

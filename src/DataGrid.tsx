@@ -50,8 +50,8 @@ import Row from './Row';
 import { cellSelectingClassname } from './style/cell';
 import { rootClassname } from './style/core';
 
-export type DefaultColumnOptions<R, SR> = Pick<
-  Column<R, SR>,
+export type DefaultColumnOptions<R> = Pick<
+  Column<R>,
   'renderCell' | 'renderHeaderCell' | 'width' | 'minWidth' | 'maxWidth' | 'resizable' | 'sortable'
 >;
 
@@ -62,7 +62,7 @@ export interface DataGridHandle {
   /** Returns the selected rows and columns of each range of the cell selection */
   // the handle isn't generic, cast the result to `SelectedCells<Row>[]`
   // oxlint-disable-next-line typescript/no-explicit-any
-  getSelectedCells: () => SelectedCells<any, any>[];
+  getSelectedCells: () => SelectedCells<any>[];
   /** Sets the cell selection, `[]` clears it */
   setCellSelection: (cellSelection: CellSelection) => void;
   /** Selects all the cells */
@@ -81,13 +81,13 @@ type SharedDivProps = Pick<
   | 'onScroll'
 >;
 
-export interface DataGridProps<R, SR = unknown, K extends Key = Key> extends SharedDivProps {
+export interface DataGridProps<R, K extends Key = Key> extends SharedDivProps {
   ref?: Maybe<React.Ref<DataGridHandle>>;
   /**
    * Grid and data props
    */
   /** An array of column definitions */
-  columns: readonly Column<NoInfer<R>, NoInfer<SR>>[];
+  columns: readonly Column<NoInfer<R>>[];
   /** An array of rows, which can be of any type */
   rows: readonly R[];
   /** Function to return a unique key/identifier for each row */
@@ -119,7 +119,7 @@ export interface DataGridProps<R, SR = unknown, K extends Key = Key> extends Sha
   /** Callback triggered when sorting changes */
   onSortColumnsChange?: Maybe<(sortColumns: SortColumn[]) => void>;
   /** Default options applied to all columns */
-  defaultColumnOptions?: Maybe<DefaultColumnOptions<NoInfer<R>, NoInfer<SR>>>;
+  defaultColumnOptions?: Maybe<DefaultColumnOptions<NoInfer<R>>>;
   /**
    * The cell selection works like in a spreadsheet:
    * click a cell, or drag over cells, to select a range, Shift + click or Shift + arrow keys to extend it, Ctrl/Cmd + click to add a range,
@@ -136,7 +136,7 @@ export interface DataGridProps<R, SR = unknown, K extends Key = Key> extends Sha
    */
   onCellSelectionContextMenu?: Maybe<
     (
-      args: CellSelectionContextMenuArgs<NoInfer<R>, NoInfer<SR>>,
+      args: CellSelectionContextMenuArgs<NoInfer<R>>,
       event: React.MouseEvent<HTMLDivElement>
     ) => void
   >;
@@ -145,21 +145,17 @@ export interface DataGridProps<R, SR = unknown, K extends Key = Key> extends Sha
    * Event props
    */
   /** Callback triggered when a cell is clicked */
-  onCellClick?: CellMouseEventHandler<R, SR>;
+  onCellClick?: CellMouseEventHandler<R>;
   /** Callback triggered when a cell is double-clicked */
-  onCellDoubleClick?: CellMouseEventHandler<R, SR>;
+  onCellDoubleClick?: CellMouseEventHandler<R>;
   /** Callback triggered when a key is pressed in a cell */
-  onCellKeyDown?: Maybe<
-    (args: CellKeyDownArgs<NoInfer<R>, NoInfer<SR>>, event: CellKeyboardEvent) => void
-  >;
+  onCellKeyDown?: Maybe<(args: CellKeyDownArgs<NoInfer<R>>, event: CellKeyboardEvent) => void>;
   /** Callback triggered when a cell's content is copied */
-  onCellCopy?: Maybe<
-    (args: CellCopyArgs<NoInfer<R>, NoInfer<SR>>, event: CellClipboardEvent) => void
-  >;
+  onCellCopy?: Maybe<(args: CellCopyArgs<NoInfer<R>>, event: CellClipboardEvent) => void>;
   /** Function called whenever the active position is changed */
-  onActivePositionChange?: Maybe<(args: PositionChangeArgs<NoInfer<R>, NoInfer<SR>>) => void>;
+  onActivePositionChange?: Maybe<(args: PositionChangeArgs<NoInfer<R>>) => void>;
   /** Callback triggered when a column is resized */
-  onColumnResize?: Maybe<(column: CalculatedColumn<R, SR>, width: number) => void>;
+  onColumnResize?: Maybe<(column: CalculatedColumn<R>, width: number) => void>;
 
   /**
    * Toggles and modes
@@ -190,7 +186,7 @@ const headerRowIdx = -1;
  *
  * <DataGrid columns={columns} rows={rows} />
  */
-export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridProps<R, SR, K>) {
+export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
   const {
     ref,
     // Grid and data props
@@ -270,7 +266,7 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     : setColumnWidthsInternal;
 
   const getColumnWidth = useCallback(
-    (column: CalculatedColumn<R, SR>) => {
+    (column: CalculatedColumn<R>) => {
       return columnWidths.get(column.key)?.width ?? column.width;
     },
     [columnWidths]
@@ -314,7 +310,7 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     queryActiveColumn,
     getActiveColumn,
     getActiveRow
-  } = useActivePosition<R, SR>({
+  } = useActivePosition<R>({
     gridRef,
     columns,
     rows,
@@ -353,7 +349,7 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     handleCellContextMenu,
     handleHeaderCellMouseDown,
     handleHeaderCellContextMenu
-  } = useCellSelection<R, SR>({
+  } = useCellSelection<R>({
     gridRef,
     rows,
     columns,

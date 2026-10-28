@@ -36,8 +36,8 @@ const resizeHandle = css`
 
 const resizeHandleClassname = `rdg-resize-handle ${resizeHandle}`;
 
-type SharedHeaderRowProps<R, SR> = Pick<
-  HeaderRowProps<R, SR, React.Key>,
+type SharedHeaderRowProps<R> = Pick<
+  HeaderRowProps<R, React.Key>,
   | 'sortColumns'
   | 'onSortColumnsChange'
   | 'setPosition'
@@ -48,13 +48,13 @@ type SharedHeaderRowProps<R, SR> = Pick<
   | 'onHeaderCellContextMenu'
 >;
 
-export interface HeaderCellProps<R, SR> extends SharedHeaderRowProps<R, SR> {
-  column: CalculatedColumn<R, SR>;
+export interface HeaderCellProps<R> extends SharedHeaderRowProps<R> {
+  column: CalculatedColumn<R>;
   isCellActive: boolean;
   isColumnSelected: boolean;
 }
 
-export default function HeaderCell<R, SR>({
+export default function HeaderCell<R>({
   column,
   isCellActive,
   isColumnSelected,
@@ -66,7 +66,7 @@ export default function HeaderCell<R, SR>({
   onSortColumnsChange,
   setPosition,
   shouldFocusGrid
-}: HeaderCellProps<R, SR>) {
+}: HeaderCellProps<R>) {
   const resizingRef = useRef(false);
   // the header row's index, header cells are always in the header row
   const rowIdx = -1;
@@ -217,16 +217,12 @@ export default function HeaderCell<R, SR>({
   );
 }
 
-type ResizeHandleProps<R, SR> = Pick<
-  HeaderCellProps<R, SR>,
+type ResizeHandleProps<R> = Pick<
+  HeaderCellProps<R>,
   'column' | 'onColumnResize' | 'onColumnResizeEnd'
 >;
 
-function ResizeHandle<R, SR>({
-  column,
-  onColumnResize,
-  onColumnResizeEnd
-}: ResizeHandleProps<R, SR>) {
+function ResizeHandle<R>({ column, onColumnResize, onColumnResizeEnd }: ResizeHandleProps<R>) {
   const resizingOffsetRef = useRef<number>(undefined);
 
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {

@@ -9,7 +9,7 @@ const initialActivePosition: Position = {
   rowIdx: Number.NEGATIVE_INFINITY
 };
 
-export function useActivePosition<R, SR>({
+export function useActivePosition<R>({
   gridRef,
   columns,
   rows,
@@ -18,7 +18,7 @@ export function useActivePosition<R, SR>({
   maxRowIdx
 }: {
   gridRef: React.RefObject<HTMLDivElement | null>;
-  columns: readonly CalculatedColumn<R, SR>[];
+  columns: readonly CalculatedColumn<R>[];
   rows: readonly R[];
   maxColIdx: number;
   minRowIdx: number;
@@ -52,7 +52,7 @@ export function useActivePosition<R, SR>({
     validatedPosition = validatePosition(initialActivePosition);
   }
 
-  function queryActiveColumn(): CalculatedColumn<R, SR> | undefined {
+  function queryActiveColumn(): CalculatedColumn<R> | undefined {
     if (!validatedPosition.isCellInActiveBounds) return;
     return columns[resolvedActivePosition.idx];
   }

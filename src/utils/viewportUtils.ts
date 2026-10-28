@@ -8,15 +8,15 @@ import type { CalculatedColumn } from '../types';
  * start-frozen columns, the unfrozen columns in the overscan range, and end-frozen columns,
  * plus the active column when it is outside of the overscan range
  */
-export function getViewportColumns<R, SR>(
-  columns: readonly CalculatedColumn<R, SR>[],
+export function getViewportColumns<R>(
+  columns: readonly CalculatedColumn<R>[],
   lastStartFrozenColumnIndex: number,
   firstEndFrozenColumnIndex: number,
   startIdx: number,
   effectiveOverscanEndIdx: number,
   activeColumnIdx: number
-): CalculatedColumn<R, SR>[] {
-  const viewportColumns: CalculatedColumn<R, SR>[] = [];
+): CalculatedColumn<R>[] {
+  const viewportColumns: CalculatedColumn<R>[] = [];
 
   for (let colIdx = 0; colIdx <= lastStartFrozenColumnIndex; colIdx++) {
     viewportColumns.push(columns[colIdx]);
@@ -50,10 +50,10 @@ export function getViewportColumns<R, SR>(
 }
 
 // The callback receives each cell's values as arguments, so no object is allocated per cell
-export function mapColumns<R, SR, T>(
-  viewportColumns: readonly CalculatedColumn<R, SR>[],
+export function mapColumns<R, T>(
+  viewportColumns: readonly CalculatedColumn<R>[],
   activeColumnIdx: number,
-  callback: (column: CalculatedColumn<R, SR>, isCellActive: boolean, index: number) => T
+  callback: (column: CalculatedColumn<R>, isCellActive: boolean, index: number) => T
 ): T[] {
   const results: T[] = [];
 

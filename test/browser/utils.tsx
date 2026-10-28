@@ -3,7 +3,7 @@ import { page, userEvent, type Locator } from 'vite-plus/test/browser';
 import { DataGrid } from '../../src';
 import type { DataGridProps } from '../../src';
 
-export function setup<R, SR, K extends React.Key = React.Key>(props: DataGridProps<R, SR, K>) {
+export function setup<R, K extends React.Key = React.Key>(props: DataGridProps<R, K>) {
   return page.render(<DataGrid {...props} />);
 }
 

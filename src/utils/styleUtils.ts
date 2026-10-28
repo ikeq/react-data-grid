@@ -1,7 +1,7 @@
 import type { CalculatedColumn, Maybe } from '../types';
 import { cellClassname, cellFrozenStartClassname, cellFrozenEndClassname } from '../style/cell';
 
-export function getCellStyle<R, SR>(column: CalculatedColumn<R, SR>): React.CSSProperties {
+export function getCellStyle<R>(column: CalculatedColumn<R>): React.CSSProperties {
   const { idx, frozen } = column;
   return {
     gridColumnStart: idx + 1,
@@ -24,8 +24,8 @@ export function classnames(...args: readonly ClassValue[]) {
   return classname.slice(1);
 }
 
-export function getCellClassname<R, SR>(
-  column: CalculatedColumn<R, SR>,
+export function getCellClassname<R>(
+  column: CalculatedColumn<R>,
   ...extraClasses: readonly ClassValue[]
 ): string {
   return classnames(

@@ -9,7 +9,7 @@ import { rowHeaderCellClassname } from './style/cell';
  * Spread it to customize it, for example `{ ...RowHeaderColumn, width: 60 }`, but keep its `key`.
  */
 // oxlint-disable-next-line typescript/no-explicit-any
-export const RowHeaderColumn: Column<any, any> = {
+export const RowHeaderColumn: Column<any> = {
   key: ROW_HEADER_COLUMN_KEY,
   name: '',
   width: 50,

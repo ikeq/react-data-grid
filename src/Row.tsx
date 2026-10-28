@@ -5,7 +5,7 @@ import type { RenderRowProps } from './types';
 import Cell from './Cell';
 import { rowClassname } from './style/row';
 
-function Row<R, SR>({
+function Row<R>({
   className,
   rowIdx,
   gridRowStart,
@@ -21,7 +21,7 @@ function Row<R, SR>({
   setActivePosition,
   style,
   ...props
-}: RenderRowProps<R, SR>) {
+}: RenderRowProps<R>) {
   className = classnames(
     rowClassname,
     `rdg-row-${rowIdx % 2 === 0 ? 'even' : 'odd'}`,
@@ -66,4 +66,4 @@ function Row<R, SR>({
   );
 }
 
-export default memo(Row) as <R, SR>(props: RenderRowProps<R, SR>) => React.JSX.Element;
+export default memo(Row) as <R>(props: RenderRowProps<R>) => React.JSX.Element;

@@ -11,9 +11,9 @@ export * from './viewportUtils';
 
 export const { min, max, floor, abs } = Math;
 
-export function clampColumnWidth<R, SR>(
+export function clampColumnWidth<R>(
   width: number,
-  { minWidth, maxWidth }: CalculatedColumn<R, SR>
+  { minWidth, maxWidth }: CalculatedColumn<R>
 ): number {
   width = max(width, minWidth);
 

@@ -10,7 +10,7 @@ const measuringCellClassname = css`
   }
 `;
 
-export function renderMeasuringCells<R, SR>(viewportColumns: readonly CalculatedColumn<R, SR>[]) {
+export function renderMeasuringCells<R>(viewportColumns: readonly CalculatedColumn<R>[]) {
   return viewportColumns.map(({ key, idx, minWidth, maxWidth }) => (
     <div
       key={key}

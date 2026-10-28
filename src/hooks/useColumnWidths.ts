@@ -4,15 +4,15 @@ import { flushSync } from 'react-dom';
 import type { CalculatedColumn, ColumnWidths, ResizedWidth } from '../types';
 import type { DataGridProps } from '../DataGrid';
 
-export function useColumnWidths<R, SR>(
-  columns: readonly CalculatedColumn<R, SR>[],
-  viewportColumns: readonly CalculatedColumn<R, SR>[],
+export function useColumnWidths<R>(
+  columns: readonly CalculatedColumn<R>[],
+  viewportColumns: readonly CalculatedColumn<R>[],
   templateColumns: readonly string[],
   gridRef: React.RefObject<HTMLDivElement | null>,
   gridWidth: number,
   columnWidths: ColumnWidths,
   onColumnWidthsChange: (columnWidths: ColumnWidths) => void,
-  onColumnResize: DataGridProps<R, SR>['onColumnResize'],
+  onColumnResize: DataGridProps<R>['onColumnResize'],
   setColumnResizing: (isColumnResizing: boolean) => void
 ) {
   const [columnToAutoResize, setColumnToAutoResize] = useState<{
@@ -97,7 +97,7 @@ export function useColumnWidths<R, SR>(
     }
   }
 
-  function handleColumnResize(column: CalculatedColumn<R, SR>, nextWidth: ResizedWidth) {
+  function handleColumnResize(column: CalculatedColumn<R>, nextWidth: ResizedWidth) {
     const { key: resizingKey } = column;
 
     flushSync(() => {

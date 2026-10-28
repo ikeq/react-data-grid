@@ -40,14 +40,14 @@ interface DragState {
   clientY: number;
 }
 
-export interface UseCellSelectionArgs<R, SR> {
+export interface UseCellSelectionArgs<R> {
   gridRef: React.RefObject<HTMLDivElement | null>;
   rows: readonly R[];
-  columns: readonly CalculatedColumn<R, SR>[];
+  columns: readonly CalculatedColumn<R>[];
   rawSelection: Maybe<CellSelection>;
   onSelectionChange: Maybe<(selection: CellSelection) => void>;
   onContextMenu: Maybe<
-    (args: CellSelectionContextMenuArgs<R, SR>, event: React.MouseEvent<HTMLDivElement>) => void
+    (args: CellSelectionContextMenuArgs<R>, event: React.MouseEvent<HTMLDivElement>) => void
   >;
   headerRowsHeight: number;
   findRowIdx: (offset: number) => number;
@@ -64,7 +64,7 @@ function getAutoScrollDelta(distance: number) {
   return Math.sign(distance) * Math.min(Math.ceil(Math.abs(distance) / 2), maxAutoScrollSpeed);
 }
 
-export function useCellSelection<R, SR>({
+export function useCellSelection<R>({
   gridRef,
   rows,
   columns,
@@ -73,7 +73,7 @@ export function useCellSelection<R, SR>({
   onContextMenu,
   headerRowsHeight,
   findRowIdx
-}: UseCellSelectionArgs<R, SR>) {
+}: UseCellSelectionArgs<R>) {
   const [internalSelection, setInternalSelection] = useState(emptyCellSelection);
   const [isSelecting, setIsSelecting] = useState(false);
   const dragRef = useRef<DragState | null>(null);
@@ -360,7 +360,7 @@ export function useCellSelection<R, SR>({
     return { anchor: position, base: ctrlKey ? selection : emptyCellSelection, isExtending: false };
   }
 
-  function handleCellMouseDown(args: CellMouseArgs<R, SR>, event: CellMouseEvent) {
+  function handleCellMouseDown(args: CellMouseArgs<R>, event: CellMouseEvent) {
     if (event.isGridDefaultPrevented()) return;
     const { column, rowIdx } = args;
     const position: Position = { idx: column.idx, rowIdx };
@@ -388,7 +388,7 @@ export function useCellSelection<R, SR>({
   }
 
   function handleHeaderCellMouseDown(
-    column: CalculatedColumn<R, SR>,
+    column: CalculatedColumn<R>,
     event: React.MouseEvent<HTMLDivElement>
   ) {
     if (event.button !== 0 || rows.length === 0) return;
@@ -408,7 +408,7 @@ export function useCellSelection<R, SR>({
   /**
    * context menu
    */
-  function getSelectedCells(currentSelection: CellSelection = selection): SelectedCells<R, SR>[] {
+  function getSelectedCells(currentSelection: CellSelection = selection): SelectedCells<R>[] {
     return currentSelection.map((range) => ({
       range,
       columns: columns
@@ -420,8 +420,8 @@ export function useCellSelection<R, SR>({
 
   function openContextMenu(
     nextSelection: CellSelection,
-    column: CalculatedColumn<R, SR> | undefined,
-    target: CellSelectionContextMenuArgs<R, SR>['target'],
+    column: CalculatedColumn<R> | undefined,
+    target: CellSelectionContextMenuArgs<R>['target'],
     event: React.MouseEvent<HTMLDivElement>
   ) {
     stopSelecting();
@@ -439,7 +439,7 @@ export function useCellSelection<R, SR>({
     );
   }
 
-  function handleCellContextMenu(args: CellMouseArgs<R, SR>, event: CellMouseEvent) {
+  function handleCellContextMenu(args: CellMouseArgs<R>, event: CellMouseEvent) {
     if (event.isGridDefaultPrevented()) return;
     const { column, rowIdx } = args;
 
@@ -466,7 +466,7 @@ export function useCellSelection<R, SR>({
   }
 
   function handleHeaderCellContextMenu(
-    column: CalculatedColumn<R, SR>,
+    column: CalculatedColumn<R>,
     event: React.MouseEvent<HTMLDivElement>
   ) {
     if (rows.length === 0) return;

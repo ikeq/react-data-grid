@@ -18,23 +18,23 @@ interface ColumnMetric {
 const DEFAULT_COLUMN_WIDTH = 'auto';
 const DEFAULT_COLUMN_MIN_WIDTH = 50;
 
-interface CalculatedColumnsArgs<R, SR> {
-  rawColumns: readonly Column<R, SR>[];
-  defaultColumnOptions: DataGridProps<R, SR>['defaultColumnOptions'];
+interface CalculatedColumnsArgs<R> {
+  rawColumns: readonly Column<R>[];
+  defaultColumnOptions: DataGridProps<R>['defaultColumnOptions'];
   viewportWidth: number;
   scrollLeft: number;
-  getColumnWidth: (column: CalculatedColumn<R, SR>) => string | number;
+  getColumnWidth: (column: CalculatedColumn<R>) => string | number;
   enableVirtualization: boolean;
 }
 
-export function useCalculatedColumns<R, SR>({
+export function useCalculatedColumns<R>({
   rawColumns,
   defaultColumnOptions,
   getColumnWidth,
   viewportWidth,
   scrollLeft,
   enableVirtualization
-}: CalculatedColumnsArgs<R, SR>) {
+}: CalculatedColumnsArgs<R>) {
   const defaultWidth = defaultColumnOptions?.width ?? DEFAULT_COLUMN_WIDTH;
   const defaultMinWidth = defaultColumnOptions?.minWidth ?? DEFAULT_COLUMN_MIN_WIDTH;
   const defaultMaxWidth = defaultColumnOptions?.maxWidth ?? undefined;
@@ -44,13 +44,13 @@ export function useCalculatedColumns<R, SR>({
   const defaultResizable = defaultColumnOptions?.resizable ?? false;
 
   const { columns, lastStartFrozenColumnIndex, firstEndFrozenColumnIndex } = useMemo((): {
-    readonly columns: readonly CalculatedColumn<R, SR>[];
+    readonly columns: readonly CalculatedColumn<R>[];
     readonly lastStartFrozenColumnIndex: number;
     readonly firstEndFrozenColumnIndex: number;
   } => {
     let startFrozenColumnCount = 0;
     let endFrozenColumnCount = 0;
-    const columns: Mutable<CalculatedColumn<R, SR>>[] = [];
+    const columns: Mutable<CalculatedColumn<R>>[] = [];
 
     for (const rawColumn of rawColumns) {
       // normalize the `frozen` value
@@ -124,9 +124,9 @@ export function useCalculatedColumns<R, SR>({
     layoutCssVars: Readonly<Record<string, string>>;
     totalStartFrozenColumnWidth: number;
     totalEndFrozenColumnWidth: number;
-    columnMetrics: ReadonlyMap<CalculatedColumn<R, SR>, ColumnMetric>;
+    columnMetrics: ReadonlyMap<CalculatedColumn<R>, ColumnMetric>;
   } => {
-    const columnMetrics = new Map<CalculatedColumn<R, SR>, ColumnMetric>();
+    const columnMetrics = new Map<CalculatedColumn<R>, ColumnMetric>();
     let left = 0;
     let totalStartFrozenColumnWidth = 0;
     let totalEndFrozenColumnWidth = 0;

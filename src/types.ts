@@ -6,7 +6,7 @@ export type Maybe<T> = T | undefined | null;
 
 export type StateSetter<S> = React.Dispatch<React.SetStateAction<S>>;
 
-export interface Column<TRow, TSummaryRow = unknown> {
+export interface Column<TRow> {
   /** The name of the column. Displayed in the header cell by default */
   readonly name: string | ReactElement;
   /** A unique key to distinguish each column */
@@ -28,11 +28,9 @@ export interface Column<TRow, TSummaryRow = unknown> {
   /** Class name(s) for the header cell */
   readonly headerCellClass?: Maybe<string>;
   /** Render function to render the content of cells */
-  readonly renderCell?: Maybe<(props: RenderCellContentProps<TRow, TSummaryRow>) => ReactNode>;
+  readonly renderCell?: Maybe<(props: RenderCellContentProps<TRow>) => ReactNode>;
   /** Render function to render the content of the header cell */
-  readonly renderHeaderCell?: Maybe<
-    (props: RenderHeaderCellContentProps<TRow, TSummaryRow>) => ReactNode
-  >;
+  readonly renderHeaderCell?: Maybe<(props: RenderHeaderCellContentProps<TRow>) => ReactNode>;
   /** Determines whether the column is frozen, and on which edge.
    *  `true` is an alias for `'start'` for backward compatibility. */
   readonly frozen?: Maybe<ColumnFrozen | true>;
@@ -44,7 +42,7 @@ export interface Column<TRow, TSummaryRow = unknown> {
   readonly sortDescendingFirst?: Maybe<boolean>;
 }
 
-export interface CalculatedColumn<TRow, TSummaryRow = unknown> extends Column<TRow, TSummaryRow> {
+export interface CalculatedColumn<TRow> extends Column<TRow> {
   /** The index of the column in the grid. Frozen columns are moved to their edge, so it can differ from the column's index in `columns` */
   readonly idx: number;
   readonly width: number | string;
@@ -53,12 +51,12 @@ export interface CalculatedColumn<TRow, TSummaryRow = unknown> extends Column<TR
   readonly resizable: boolean;
   readonly sortable: boolean;
   readonly frozen: ColumnFrozen;
-  readonly renderCell: (props: RenderCellContentProps<TRow, TSummaryRow>) => ReactNode;
-  readonly renderHeaderCell: (props: RenderHeaderCellContentProps<TRow, TSummaryRow>) => ReactNode;
+  readonly renderCell: (props: RenderCellContentProps<TRow>) => ReactNode;
+  readonly renderHeaderCell: (props: RenderHeaderCellContentProps<TRow>) => ReactNode;
   // Always set, `undefined` when not set on the column
-  readonly cellClass: Column<TRow, TSummaryRow>['cellClass'];
-  readonly headerCellClass: Column<TRow, TSummaryRow>['headerCellClass'];
-  readonly sortDescendingFirst: Column<TRow, TSummaryRow>['sortDescendingFirst'];
+  readonly cellClass: Column<TRow>['cellClass'];
+  readonly headerCellClass: Column<TRow>['headerCellClass'];
+  readonly sortDescendingFirst: Column<TRow>['sortDescendingFirst'];
 }
 
 export interface Position {
@@ -98,36 +96,36 @@ export type SelectedRowRanges = readonly (readonly [
   isLastRow: boolean
 ])[];
 
-export interface SelectedCells<TRow, TSummaryRow = unknown> {
+export interface SelectedCells<TRow> {
   /** The range that the cells come from */
   readonly range: CellRange;
   /** The selected columns, without the row header column */
-  readonly columns: readonly CalculatedColumn<TRow, TSummaryRow>[];
+  readonly columns: readonly CalculatedColumn<TRow>[];
   /** The selected rows */
   readonly rows: readonly TRow[];
 }
 
-export interface CellSelectionContextMenuArgs<TRow, TSummaryRow = unknown> {
+export interface CellSelectionContextMenuArgs<TRow> {
   /** The selection, updated to include the right-clicked cell, row, or column */
   readonly selection: CellSelection;
   /** The column of the right-clicked cell or header cell, `undefined` for the row header column's cells */
-  readonly column: CalculatedColumn<TRow, TSummaryRow> | undefined;
+  readonly column: CalculatedColumn<TRow> | undefined;
   /** Where the context menu was opened */
   readonly target: 'CELL' | 'ROW_HEADER' | 'COLUMN_HEADER' | 'ALL';
   /** Returns the selected rows and columns of each range */
-  readonly getSelectedCells: () => SelectedCells<TRow, TSummaryRow>[];
+  readonly getSelectedCells: () => SelectedCells<TRow>[];
 }
 
-export interface RenderCellContentProps<TRow, TSummaryRow = unknown> {
-  column: CalculatedColumn<TRow, TSummaryRow>;
+export interface RenderCellContentProps<TRow> {
+  column: CalculatedColumn<TRow>;
   row: TRow;
   rowIdx: number;
   /** `0` when the cell is active and `-1` otherwise, for focusable elements in the cell */
   tabIndex: number;
 }
 
-export interface RenderHeaderCellContentProps<TRow, TSummaryRow = unknown> {
-  column: CalculatedColumn<TRow, TSummaryRow>;
+export interface RenderHeaderCellContentProps<TRow> {
+  column: CalculatedColumn<TRow>;
   /** The sort direction of the column, from `sortColumns`, or `undefined` if it is not sorted */
   sortDirection: SortDirection | undefined;
   /** The column's position in `sortColumns`, starting at 1, when sorting by multiple columns, or `undefined` otherwise */
@@ -149,11 +147,8 @@ export interface SortEvent {
   readonly metaKey: boolean;
 }
 
-export interface RenderCellProps<TRow, TSummaryRow> extends Omit<
-  React.ComponentProps<'div'>,
-  'children'
-> {
-  column: CalculatedColumn<TRow, TSummaryRow>;
+export interface RenderCellProps<TRow> extends Omit<React.ComponentProps<'div'>, 'children'> {
+  column: CalculatedColumn<TRow>;
   row: TRow;
   rowIdx: number;
   isCellActive: boolean;
@@ -164,10 +159,10 @@ export interface RenderCellProps<TRow, TSummaryRow> extends Omit<
    * A bitmask of `1` for the top edge, `2` for the bottom edge, `4` for the inline start edge, and `8` for the inline end edge
    */
   cellSelectionEdges: number;
-  onCellMouseDown: CellMouseEventHandler<TRow, TSummaryRow>;
-  onCellClick: CellMouseEventHandler<TRow, TSummaryRow>;
-  onCellDoubleClick: CellMouseEventHandler<TRow, TSummaryRow>;
-  onCellContextMenu: CellMouseEventHandler<TRow, TSummaryRow>;
+  onCellMouseDown: CellMouseEventHandler<TRow>;
+  onCellClick: CellMouseEventHandler<TRow>;
+  onCellDoubleClick: CellMouseEventHandler<TRow>;
+  onCellContextMenu: CellMouseEventHandler<TRow>;
   setActivePosition: (position: Position) => void;
 }
 
@@ -184,52 +179,49 @@ export type CellKeyboardEvent = CellEvent<React.KeyboardEvent<HTMLDivElement>>;
 
 export type CellClipboardEvent = React.ClipboardEvent<HTMLDivElement>;
 
-export interface CellMouseArgs<TRow, TSummaryRow = unknown> {
+export interface CellMouseArgs<TRow> {
   /** The column object of the cell. */
-  column: CalculatedColumn<TRow, TSummaryRow>;
+  column: CalculatedColumn<TRow>;
   /** The row object of the cell. */
   row: TRow;
   /** The row index of the cell. */
   rowIdx: number;
 }
 
-export interface CellKeyDownArgs<TRow, TSummaryRow = unknown> {
+export interface CellKeyDownArgs<TRow> {
   /** column object of the active cell */
-  column: CalculatedColumn<TRow, TSummaryRow>;
+  column: CalculatedColumn<TRow>;
   row: TRow;
   rowIdx: number;
   setActivePosition: (position: Position, options?: SetActivePositionOptions) => void;
 }
 
-export interface PositionChangeArgs<TRow, TSummaryRow = unknown> {
+export interface PositionChangeArgs<TRow> {
   /** row index of the active position */
   rowIdx: number;
   /** row object of the active position, `undefined` if the active position is on the header row */
   row: TRow | undefined;
   /** column object of the active position */
-  column: CalculatedColumn<TRow, TSummaryRow>;
+  column: CalculatedColumn<TRow>;
 }
 
-export type CellMouseEventHandler<R, SR> = Maybe<
-  (args: CellMouseArgs<NoInfer<R>, NoInfer<SR>>, event: CellMouseEvent) => void
+export type CellMouseEventHandler<R> = Maybe<
+  (args: CellMouseArgs<NoInfer<R>>, event: CellMouseEvent) => void
 >;
 
-export type MapViewportColumns<TRow, TSummaryRow> = <T>(
+export type MapViewportColumns<TRow> = <T>(
   activeIdx: number | undefined,
-  callback: (column: CalculatedColumn<TRow, TSummaryRow>, isCellActive: boolean, index: number) => T
+  callback: (column: CalculatedColumn<TRow>, isCellActive: boolean, index: number) => T
 ) => T[];
 
-export interface RenderRowProps<TRow, TSummaryRow = unknown> extends Omit<
-  React.ComponentProps<'div'>,
-  'children'
-> {
+export interface RenderRowProps<TRow> extends Omit<React.ComponentProps<'div'>, 'children'> {
   /**
    * Calls `callback` for each cell to render in the row, and returns the results.
    * `activeIdx` is the column index of the row's active cell, if any: that cell is rendered even when it is scrolled out of view.
    * If virtualization would leave out the active row, it is rendered with only its active cell, if any.
    * The callback receives the cell's column, whether the cell is active, and its index in the results.
    */
-  mapViewportColumns: MapViewportColumns<TRow, TSummaryRow>;
+  mapViewportColumns: MapViewportColumns<TRow>;
   row: TRow;
   rowIdx: number;
   activeCellIdx: number | undefined;
@@ -240,19 +232,19 @@ export interface RenderRowProps<TRow, TSummaryRow = unknown> extends Omit<
    */
   selectedRowRanges: SelectedRowRanges | undefined;
   rowClass: Maybe<(row: TRow, rowIdx: number) => Maybe<string>>;
-  onCellMouseDown: CellMouseEventHandler<TRow, TSummaryRow>;
-  onCellClick: CellMouseEventHandler<TRow, TSummaryRow>;
-  onCellDoubleClick: CellMouseEventHandler<TRow, TSummaryRow>;
-  onCellContextMenu: CellMouseEventHandler<TRow, TSummaryRow>;
+  onCellMouseDown: CellMouseEventHandler<TRow>;
+  onCellClick: CellMouseEventHandler<TRow>;
+  onCellDoubleClick: CellMouseEventHandler<TRow>;
+  onCellContextMenu: CellMouseEventHandler<TRow>;
   setActivePosition: (position: Position) => void;
 }
 
-interface CellCopyPasteArgs<TRow, TSummaryRow = unknown> {
-  column: CalculatedColumn<TRow, TSummaryRow>;
+interface CellCopyPasteArgs<TRow> {
+  column: CalculatedColumn<TRow>;
   row: TRow;
 }
 
-export type CellCopyArgs<TRow, TSummaryRow = unknown> = CellCopyPasteArgs<TRow, TSummaryRow>;
+export type CellCopyArgs<TRow> = CellCopyPasteArgs<TRow>;
 
 export interface SortColumn {
   readonly columnKey: string;

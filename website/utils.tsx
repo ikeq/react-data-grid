@@ -18,7 +18,7 @@ function serializeCellValue(value: string) {
  * Returns the header and the values of each selected range,
  * from the rows instead of the DOM, so it includes the rows that virtualization didn't render
  */
-export function getSelectedCellsTables<R, SR>(selectedCells: readonly SelectedCells<R, SR>[]) {
+export function getSelectedCellsTables<R>(selectedCells: readonly SelectedCells<R>[]) {
   return selectedCells.map(({ columns, rows }) => [
     columns.map((column) => (typeof column.name === 'string' ? column.name : column.key)),
     ...rows.map((row) =>
@@ -27,8 +27,8 @@ export function getSelectedCellsTables<R, SR>(selectedCells: readonly SelectedCe
   ]);
 }
 
-export function exportSelectedCellsToCsv<R, SR>(
-  selectedCells: readonly SelectedCells<R, SR>[],
+export function exportSelectedCellsToCsv<R>(
+  selectedCells: readonly SelectedCells<R>[],
   fileName: string
 ) {
   // ranges added with Ctrl/Cmd are separated by an empty line
@@ -40,8 +40,8 @@ export function exportSelectedCellsToCsv<R, SR>(
 }
 
 // tab-separated values paste into separate cells in spreadsheets
-export function copySelectedCellsToClipboard<R, SR>(
-  selectedCells: readonly SelectedCells<R, SR>[],
+export function copySelectedCellsToClipboard<R>(
+  selectedCells: readonly SelectedCells<R>[],
   withHeader: boolean
 ) {
   const content = getSelectedCellsTables(selectedCells)

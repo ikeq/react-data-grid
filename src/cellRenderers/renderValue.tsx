@@ -1,5 +1,5 @@
 import type { RenderCellContentProps } from '../types';
 
-export function renderValue<R, SR>(props: RenderCellContentProps<R, SR>) {
+export function renderValue<R>(props: RenderCellContentProps<R>) {
   return props.row?.[props.column.key as keyof R] as React.ReactNode;
 }

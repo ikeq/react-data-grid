@@ -46,13 +46,13 @@ const sortButtonClassname = css`
  * Clicking a header cell selects the column, so sortable columns are sorted with a button,
  * which shows the sort state passed by the grid. Ctrl/Cmd + click sorts by multiple columns.
  */
-export function renderSortableHeaderCell<R, SR>({
+export function renderSortableHeaderCell<R>({
   column,
   sortDirection,
   priority,
   tabIndex,
   onSort
-}: RenderHeaderCellContentProps<R, SR>) {
+}: RenderHeaderCellContentProps<R>) {
   if (!column.sortable) return column.name;
 
   return (

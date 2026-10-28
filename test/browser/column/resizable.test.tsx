@@ -44,13 +44,13 @@ const columns: readonly Column<Row>[] = [
 ];
 
 test('cannot resize or auto resize column when resizable is not specified', async () => {
-  await setup<Row, unknown>({ columns, rows: [] });
+  await setup<Row>({ columns, rows: [] });
   await expect.element(getResizeHandle('col1')).not.toBeInTheDocument();
 });
 
 test('should resize column when dragging the handle', async () => {
   const onColumnResize = vi.fn();
-  await setup<Row, unknown>({ columns, rows: [], onColumnResize });
+  await setup<Row>({ columns, rows: [], onColumnResize });
   expect(onColumnResize).not.toHaveBeenCalled();
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 200px' });
   await resize('col2', -50);
@@ -59,14 +59,14 @@ test('should resize column when dragging the handle', async () => {
 });
 
 test('should use the maxWidth if specified when dragging the handle', async () => {
-  await setup<Row, unknown>({ columns, rows: [] });
+  await setup<Row>({ columns, rows: [] });
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 200px' });
   await resize('col2', 1000);
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 400px' });
 });
 
 test('should use the minWidth if specified when dragging the handle', async () => {
-  await setup<Row, unknown>({ columns, rows: [] });
+  await setup<Row>({ columns, rows: [] });
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 200px' });
   await resize('col2', -150);
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 100px' });
@@ -74,7 +74,7 @@ test('should use the minWidth if specified when dragging the handle', async () =
 
 test('should resize column using keyboard', async () => {
   const onColumnResize = vi.fn();
-  await setup<Row, unknown>({ columns, rows: [], onColumnResize });
+  await setup<Row>({ columns, rows: [], onColumnResize });
   expect(onColumnResize).not.toHaveBeenCalled();
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 200px' });
   const col2 = page.getHeaderCell({ name: 'col2' });
@@ -92,7 +92,7 @@ test('should resize column using keyboard', async () => {
 
 test('should use the maxWidth if specified when resizing using keyboard', async () => {
   const onColumnResize = vi.fn();
-  await setup<Row, unknown>({ columns, rows: [], onColumnResize });
+  await setup<Row>({ columns, rows: [], onColumnResize });
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 200px' });
   const col2 = page.getHeaderCell({ name: 'col2' });
   await userEvent.click(col2);
@@ -103,7 +103,7 @@ test('should use the maxWidth if specified when resizing using keyboard', async 
 
 test('should use the minWidth if specified when resizing using keyboard', async () => {
   const onColumnResize = vi.fn();
-  await setup<Row, unknown>({ columns, rows: [], onColumnResize });
+  await setup<Row>({ columns, rows: [], onColumnResize });
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 200px' });
   const col2 = page.getHeaderCell({ name: 'col2' });
   await userEvent.click(col2);
@@ -114,7 +114,7 @@ test('should use the minWidth if specified when resizing using keyboard', async 
 
 test('should call onColumnWidthsChange when the key is released after resizing using keyboard', async () => {
   const onColumnWidthsChange = vi.fn();
-  await setup<Row, unknown>({ columns, rows: [], onColumnWidthsChange });
+  await setup<Row>({ columns, rows: [], onColumnWidthsChange });
   await userEvent.click(page.getHeaderCell({ name: 'col2' }));
 
   // keep the key pressed, so the column is still being resized
@@ -132,7 +132,7 @@ test('should call onColumnWidthsChange when the key is released after resizing u
 
 test('should end the keyboard resize when the header cell loses focus', async () => {
   const onColumnWidthsChange = vi.fn();
-  await setup<Row, unknown>({ columns, rows: [], onColumnWidthsChange });
+  await setup<Row>({ columns, rows: [], onColumnWidthsChange });
   const headerCell = page.getHeaderCell({ name: 'col2' });
 
   await userEvent.click(headerCell);
@@ -179,7 +179,7 @@ test('should use the columnWidths prop again after resizing using keyboard', asy
 
 test('should auto resize column when resize handle is double-clicked', async () => {
   const onColumnResize = vi.fn();
-  await setup<Row, unknown>({
+  await setup<Row>({
     columns,
     rows: [
       {
@@ -212,7 +212,7 @@ test('should auto resize column when resize handle is double-clicked', async () 
 });
 
 test('should use the maxWidth if specified on auto resize', async () => {
-  await setup<Row, unknown>({
+  await setup<Row>({
     columns,
     rows: [
       {
@@ -227,7 +227,7 @@ test('should use the maxWidth if specified on auto resize', async () => {
 });
 
 test('should use the minWidth if specified on auto resize', async () => {
-  await setup<Row, unknown>({
+  await setup<Row>({
     columns,
     rows: [
       {
@@ -243,14 +243,11 @@ test('should use the minWidth if specified on auto resize', async () => {
 
 test('should remeasure flex columns when resizing a column', async () => {
   const onColumnResize = vi.fn();
-  await setup<
-    {
-      readonly col1: string;
-      readonly col2: string;
-      readonly col3: string;
-    },
-    unknown
-  >({
+  await setup<{
+    readonly col1: string;
+    readonly col2: string;
+    readonly col3: string;
+  }>({
     columns: [
       {
         key: 'col1',
