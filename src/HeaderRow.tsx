@@ -56,6 +56,14 @@ const headerRow = css`
       position: sticky;
     }
 
+    /*
+     * The line between the header and the data area, the only line in the grid.
+     * It is drawn on the cells of the last header row, which are sticky, so it stays when the rows scroll under them.
+     */
+    &:nth-last-child(1 of .rdg-header-row) > .${cell} {
+      border-block-end: var(--rdg-border-width) solid var(--rdg-border-color);
+    }
+
     & > .${cellFrozenBase} {
       z-index: 3;
     }

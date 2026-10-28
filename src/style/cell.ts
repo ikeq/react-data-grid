@@ -11,8 +11,6 @@ export const cell = css`
     position: relative; /* needed for absolute positioning to work */
     padding-block: 0;
     padding-inline: 8px;
-    border-inline-end: var(--rdg-border-width) solid var(--rdg-border-color);
-    border-block-end: var(--rdg-border-width) solid var(--rdg-border-color);
     align-content: center;
     background-color: inherit;
 
@@ -22,11 +20,7 @@ export const cell = css`
     outline: none;
 
     &[aria-selected='true']::before {
-      /*
-       * Drawn inside the cell's grid lines on every side, like the border around the selected ranges.
-       * An outline would cover the cell's own end and bottom borders, but not the start and top grid lines,
-       * which belong to the previous cells, so the outline would not be symmetric.
-       */
+      /* drawn on a pseudo element inside the cell, like the border around the selected ranges, so both line up */
       content: '';
       position: absolute;
       inset: 0;
@@ -60,8 +54,21 @@ export const cellFrozenBase = css`
   }
 `;
 
-export const cellFrozenStartClassname = `rdg-cell-frozen-start ${cellFrozenBase}`;
-export const cellFrozenEndClassname = `rdg-cell-frozen-end ${cellFrozenBase}`;
+// a line between the frozen columns and the scrolling columns, like the line between the header and the data area
+const cellFrozenEdge = css`
+  @layer rdg.Cell {
+    &.rdg-cell-frozen-start:nth-last-child(1 of .rdg-cell-frozen-start) {
+      border-inline-end: var(--rdg-border-width) solid var(--rdg-border-color);
+    }
+
+    &.rdg-cell-frozen-end:nth-child(1 of .rdg-cell-frozen-end) {
+      border-inline-start: var(--rdg-border-width) solid var(--rdg-border-color);
+    }
+  }
+`;
+
+export const cellFrozenStartClassname = `rdg-cell-frozen-start ${cellFrozenBase} ${cellFrozenEdge}`;
+export const cellFrozenEndClassname = `rdg-cell-frozen-end ${cellFrozenBase} ${cellFrozenEdge}`;
 
 const cellDragHandle = css`
   @layer rdg.DragHandle {

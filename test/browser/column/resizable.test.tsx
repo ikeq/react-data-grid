@@ -192,10 +192,10 @@ test('should auto resize column when resize handle is double-clicked', async () 
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 200px' });
   await autoResize('col2');
   await testGridTemplateColumns({
-    chrome: '100px 327.703px',
-    firefox: '100px 327.833px',
+    chrome: '100px 326.703px',
+    firefox: '100px 326.833px',
     firefoxCI: '100px 400px',
-    webkit: '100px 327.703125px',
+    webkit: '100px 326.703125px',
     webkitCI: '100px 400px'
   });
   expect(onColumnResize).toHaveBeenCalledExactlyOnceWith(
@@ -204,7 +204,7 @@ test('should auto resize column when resize handle is double-clicked', async () 
     expect.toSatisfy(
       (width) =>
         // Chrome and Firefox on Windows
-        (width >= 327.7 && width <= 327.9) ||
+        (width >= 326.7 && width <= 326.9) ||
         // Firefox/WebKit in CI
         width === 400
     )
@@ -285,21 +285,21 @@ test('should remeasure flex columns when resizing a column', async () => {
   });
   await autoResize('col1');
   await testGridTemplateColumns({
-    chrome: '79.1406px 919.422px 919.438px',
-    firefox: '79.1667px 919.417px 919.417px',
-    firefoxCI: '100.5px 908.75px 908.75px',
-    webkit: '79.140625px 919.421875px 919.421875px',
-    webkitCI: '102.796875px 907.59375px 907.59375px'
+    chrome: '78.1406px 919.922px 919.938px',
+    firefox: '78.1667px 919.917px 919.917px',
+    firefoxCI: '99.5px 909.25px 909.25px',
+    webkit: '78.140625px 919.921875px 919.921875px',
+    webkitCI: '101.796875px 908.09375px 908.09375px'
   });
   expect(onColumnResize).toHaveBeenCalledOnce();
   // onColumnResize is not called if width is not changed
   await autoResize('col1');
   await testGridTemplateColumns({
-    chrome: '79.1406px 919.422px 919.438px',
-    firefox: '79.1667px 919.417px 919.417px',
-    firefoxCI: '100.5px 908.75px 908.75px',
-    webkit: '79.140625px 919.421875px 919.421875px',
-    webkitCI: '102.796875px 907.59375px 907.59375px'
+    chrome: '78.1406px 919.922px 919.938px',
+    firefox: '78.1667px 919.917px 919.917px',
+    firefoxCI: '99.5px 909.25px 909.25px',
+    webkit: '78.140625px 919.921875px 919.921875px',
+    webkitCI: '101.796875px 908.09375px 908.09375px'
   });
   expect(onColumnResize).toHaveBeenCalledOnce();
 });

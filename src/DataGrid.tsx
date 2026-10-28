@@ -79,14 +79,7 @@ import {
   cellDragHandleFrozenClassname,
   cellSelectingClassname
 } from './style/cell';
-import {
-  rootClassname,
-  frozenColumnShadowEndClassname,
-  frozenColumnShadowEndTopClassname,
-  frozenColumnShadowStartClassname,
-  frozenColumnShadowStartTopClassname,
-  viewportDraggingClassname
-} from './style/core';
+import { rootClassname, viewportDraggingClassname } from './style/core';
 import SummaryRow from './SummaryRow';
 
 export type DefaultColumnOptions<R, SR> = Pick<
@@ -426,15 +419,6 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
   const isSelectable = selectedRows != null && onSelectedRowsChange != null;
   const { leftKey, rightKey } = getLeftRightKey(direction);
   const ariaRowCount = rawAriaRowCount ?? headerRowsCount + rows.length + summaryRowsCount;
-  const frozenStartShadowStyles: React.CSSProperties = {
-    gridColumnStart: lastStartFrozenColumnIndex + 2,
-    insetInlineStart: totalStartFrozenColumnWidth
-  };
-  const frozenEndShadowStyles: React.CSSProperties = {
-    gridColumnStart: firstEndFrozenColumnIndex + 1,
-    gridColumnEnd: -1,
-    insetInlineEnd: totalEndFrozenColumnWidth
-  };
 
   const {
     activePosition,
@@ -1136,53 +1120,6 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     );
   }
 
-  function renderFrozenShadow(
-    shadowStyles: React.CSSProperties,
-    bodyClassname: string,
-    topClassname: string
-  ) {
-    return (
-      <>
-        <div
-          className={topClassname}
-          style={{
-            ...shadowStyles,
-            gridRowStart: 1,
-            gridRowEnd: headerRowsCount + 1 + topSummaryRowsCount,
-            insetBlockStart: 0
-          }}
-        />
-
-        {rows.length > 0 && (
-          <div
-            className={bodyClassname}
-            style={{
-              ...shadowStyles,
-              gridRowStart: headerAndTopSummaryRowsCount + rowOverscanStartIdx + 1,
-              gridRowEnd: headerAndTopSummaryRowsCount + rowOverscanEndIdx + 2
-            }}
-          />
-        )}
-
-        {bottomSummaryRowsCount > 0 && (
-          <div
-            className={topClassname}
-            style={{
-              ...shadowStyles,
-              gridRowStart: headerAndTopSummaryRowsCount + rows.length + 1,
-              gridRowEnd: headerAndTopSummaryRowsCount + rows.length + 1 + bottomSummaryRowsCount,
-              insetBlockStart:
-                clientHeight > totalRowHeight
-                  ? gridHeight - summaryRowHeight * bottomSummaryRowsCount
-                  : undefined,
-              insetBlockEnd: clientHeight > totalRowHeight ? undefined : 0
-            }}
-          />
-        )}
-      </>
-    );
-  }
-
   function getCellEditor(rowIdx: number) {
     if (
       !activePositionIsCellInViewport ||
@@ -1459,20 +1396,6 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
           </>
         )}
       </DataGridRenderersContext>
-
-      {lastStartFrozenColumnIndex > -1 &&
-        renderFrozenShadow(
-          frozenStartShadowStyles,
-          frozenColumnShadowStartClassname,
-          frozenColumnShadowStartTopClassname
-        )}
-
-      {firstEndFrozenColumnIndex > -1 &&
-        renderFrozenShadow(
-          frozenEndShadowStyles,
-          frozenColumnShadowEndClassname,
-          frozenColumnShadowEndTopClassname
-        )}
 
       {getDragHandle()}
 
