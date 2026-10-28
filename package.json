@@ -1,5 +1,5 @@
 {
-  "name": "react-data-grid",
+  "name": "@ikeq/react-data-grid",
   "version": "7.0.0-beta.63",
   "description": "Feature-rich and customizable data grid React component",
   "keywords": [
@@ -23,10 +23,10 @@
       "default": "./lib/index.js"
     }
   },
-  "publishConfig": {
-    "provenance": true
-  },
   "scripts": {
+    "dev": "vp dev",
+    "pack": "vp pack",
+    "build": "vp build",
     "prepare": "vp config"
   },
   "devDependencies": {
@@ -47,6 +47,7 @@
     "jspdf-autotable": "^5.0.7",
     "oxc-transform-react": "^0.155.0",
     "playwright": "^1.62.1",
+    "postcss": "^8.5.32",
     "publint": "^0.3.25",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
@@ -65,18 +66,6 @@
     "typescript": "$typescript",
     "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
     "vitest": "5.0.5"
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "npm",
-      "version": "^12.2.1",
-      "onFail": "download"
-    },
-    "runtime": {
-      "name": "node",
-      "version": "^26.12.1",
-      "onFail": "download"
-    }
   },
   "allowScripts": {
     "core-js": false

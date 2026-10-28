@@ -2,11 +2,10 @@ import { basename } from 'node:path';
 import react from '@vitejs/plugin-react';
 import { ecij } from 'ecij/plugin';
 import { Features } from 'lightningcss';
+import type { AtRule, Plugin as PostCSSPlugin } from 'postcss';
 import { defineConfig, lazyPlugins } from 'vite-plus';
 import { playwright, type PlaywrightProviderOptions } from 'vite-plus/test/browser-playwright';
 import type { BrowserCommandContext, BrowserInstanceOption } from 'vite-plus/test/node';
-
-import pkg from './package.json' with { type: 'json' };
 
 const isCI = process.env.CI === 'true';
 const isCIWorkflow = process.env.GITHUB_WORKFLOW === 'CI';
@@ -68,6 +67,33 @@ const reactPlugin = react({
   // and the compiler's TypeScript transform would strip all of their declarations
   exclude: [/\/node_modules\//, /\.d\.ts$/]
 });
+
+// Safari handles cascade layers poorly, so the packed CSS has no `@layer` rules.
+// ecij wraps each `@layer rdg.Xxx { ... }` from the source in `.className { ... }`,
+// so most layers are nested in style rules, and `src/style/layers.css` declares their order.
+// Each `@layer` block is replaced with its content, in place, and `@layer` statements are removed.
+// The styles keep their source order, which matches the layer order for every
+// declaration that the grid's own rules compete on, so the grid looks the same.
+// Without layers, the grid's rules no longer lose to unlayered styles by default:
+// overrides need the same specificity and must come after `styles.css`, as usual.
+const unwrapCascadeLayers: PostCSSPlugin = {
+  postcssPlugin: 'unwrap-cascade-layers',
+  OnceExit(root) {
+    const layers: AtRule[] = [];
+    root.walkAtRules('layer', (layer) => {
+      layers.push(layer);
+    });
+    // `walkAtRules` visits parents before children, so unwrap in reverse to start with the innermost layers
+    for (const layer of layers.toReversed()) {
+      if (layer.nodes === undefined) {
+        // `@layer a, b;` statement
+        layer.remove();
+      } else {
+        layer.replaceWith(...layer.nodes);
+      }
+    }
+  }
+};
 
 const actionTimeout = 2000;
 const viewport = { width: 1920, height: 1080 } as const;
@@ -231,9 +257,16 @@ export default defineConfig({
     },
     css: {
       fileName: 'styles.css',
+      // run `unwrapCascadeLayers`, Lightning CSS still lowers the syntax for `target` afterwards
+      transformer: 'postcss',
+      postcss: {
+        plugins: [unwrapCascadeLayers]
+      },
       lightningcss: {
-        // https://github.com/parcel-bundler/lightningcss/issues/873
-        exclude: Features.Nesting | Features.LightDark
+        // Safari before 17.2 doesn't fully support CSS nesting, so the packed CSS is flattened.
+        // light-dark() is kept as is: https://github.com/parcel-bundler/lightningcss/issues/873
+        include: Features.Nesting,
+        exclude: Features.LightDark
       }
     },
     dts: {
@@ -250,9 +283,8 @@ export default defineConfig({
     },
     plugins: [
       ecij({
-        // We add the package version as prefix to avoid style conflicts
-        // between multiple versions of RDG on the same page
-        classPrefix: `rdg-${pkg.version.replaceAll('.', '-')}-`
+        // no version in the prefix, so class names stay the same across versions
+        classPrefix: 'rdg-'
       }),
       reactPlugin
     ]
