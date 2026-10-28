@@ -14,7 +14,7 @@ const root = css`
     --rdg-selection-color: light-dark(#000, #fff);
     --rdg-font-size: 12px;
     --rdg-border-width: 1px;
-    --rdg-color: light-dark(#888, #ddd);
+    --rdg-color: inherit;
     --rdg-border-color: light-dark(#ddd, #444);
     --rdg-background-color: light-dark(hsl(0deg 0% 100%), hsl(0deg 0% 13%));
     /* same as the data area, but opaque, as the header is sticky and the rows scroll under it */
@@ -30,17 +30,7 @@ const root = css`
     --rdg-header-color: light-dark(#000, #fff);
     --rdg-header-selection-color: var(--rdg-header-color);
 
-    &.rdg-dark {
-      color-scheme: dark;
-    }
-
-    &.rdg-light {
-      color-scheme: light;
-    }
-
     display: grid;
-
-    accent-color: light-dark(hsl(207deg 100% 29%), hsl(207deg 100% 79%));
 
     /* https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Positioned_layout/Stacking_context */
     /* We set a stacking context so internal elements don't render on top of external elements. */
