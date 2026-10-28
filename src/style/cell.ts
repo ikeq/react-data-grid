@@ -75,3 +75,52 @@ export const cellDragHandleFrozenClassname = css`
 `;
 
 export const cellDragHandleClassname = `rdg-cell-drag-handle ${cellDragHandle}`;
+
+const cellRangeSelected = css`
+  @layer rdg.Cell {
+    background-color: var(--rdg-cell-selection-background-color);
+
+    @media (forced-colors: active) {
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
+`;
+
+export const cellRangeSelectedClassname = `rdg-cell-range-selected ${cellRangeSelected}`;
+
+const rowHeaderCell = css`
+  @layer rdg.Cell {
+    background-color: var(--rdg-header-background-color);
+    color: var(--rdg-row-header-color);
+    text-align: end;
+    cursor: default;
+    user-select: none;
+  }
+`;
+
+export const rowHeaderCellClassname = `rdg-row-header-cell ${rowHeaderCell}`;
+
+// highlights the row header cells of the selected rows, and the header cells of the selected columns
+const headerCellRangeSelected = css`
+  @layer rdg.HeaderCell {
+    background-color: var(--rdg-header-selection-background-color);
+    color: var(--rdg-header-selection-color);
+
+    @media (forced-colors: active) {
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
+`;
+
+export const headerCellRangeSelectedClassname = `rdg-header-cell-range-selected ${headerCellRangeSelected}`;
+
+// prevents text selection while selecting cells with a pointer
+const cellSelecting = css`
+  @layer rdg.Root {
+    user-select: none;
+  }
+`;
+
+export const cellSelectingClassname = `rdg-cell-selecting ${cellSelecting}`;

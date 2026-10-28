@@ -1,14 +1,15 @@
 import { memo, useState } from 'react';
 import { css } from 'ecij';
 
-import { classnames } from './utils';
+import { classnames, intervalsOverlap, ROW_HEADER_COLUMN_KEY } from './utils';
 import type {
   CalculatedColumn,
   Direction,
   MapViewportColumns,
   Maybe,
   Position,
-  ResizedWidth
+  ResizedWidth,
+  SelectedCellIntervals
 } from './types';
 import type { DataGridProps } from './DataGrid';
 import HeaderCell from './HeaderCell';
@@ -30,6 +31,17 @@ export interface HeaderRowProps<R, SR, K extends React.Key> extends SharedDataGr
   shouldFocusGrid: boolean;
   direction: Direction;
   headerRowClass: Maybe<string>;
+  /** When enabled, clicking a header cell selects its column instead of sorting it */
+  enableCellSelection: boolean;
+  selectedColumnIntervals: SelectedCellIntervals | undefined;
+  onHeaderCellMouseDown: (
+    column: CalculatedColumn<R, SR>,
+    event: React.MouseEvent<HTMLDivElement>
+  ) => void;
+  onHeaderCellContextMenu: (
+    column: CalculatedColumn<R, SR>,
+    event: React.MouseEvent<HTMLDivElement>
+  ) => void;
 }
 
 const headerRow = css`
@@ -64,7 +76,11 @@ function HeaderRow<R, SR, K extends React.Key>({
   activeCellIdx,
   setPosition,
   shouldFocusGrid,
-  direction
+  direction,
+  enableCellSelection,
+  selectedColumnIntervals,
+  onHeaderCellMouseDown,
+  onHeaderCellContextMenu
 }: HeaderRowProps<R, SR, K>) {
   const [draggedColumnKey, setDraggedColumnKey] = useState<string>();
   const isPositionOnRow = activeCellIdx === -1;
@@ -79,6 +95,13 @@ function HeaderRow<R, SR, K extends React.Key>({
         colSpan={colSpan}
         rowIdx={rowIdx}
         isCellActive={isCellActive}
+        isColumnSelected={
+          column.key !== ROW_HEADER_COLUMN_KEY &&
+          intervalsOverlap(selectedColumnIntervals, column.idx, column.idx + colSpan - 1)
+        }
+        enableCellSelection={enableCellSelection}
+        onHeaderCellMouseDown={onHeaderCellMouseDown}
+        onHeaderCellContextMenu={onHeaderCellContextMenu}
         onColumnResize={onColumnResize}
         onColumnResizeEnd={onColumnResizeEnd}
         onColumnsReorder={onColumnsReorder}

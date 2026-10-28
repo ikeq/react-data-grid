@@ -15,6 +15,7 @@ import {
 } from './utils';
 import type { CalculatedColumn, SortColumn } from './types';
 import type { HeaderRowProps } from './HeaderRow';
+import { headerCellRangeSelectedClassname } from './style/cell';
 
 const cellSortableClassname = css`
   @layer rdg.HeaderCell {
@@ -80,6 +81,9 @@ type SharedHeaderRowProps<R, SR> = Pick<
   | 'shouldFocusGrid'
   | 'direction'
   | 'onColumnsReorder'
+  | 'enableCellSelection'
+  | 'onHeaderCellMouseDown'
+  | 'onHeaderCellContextMenu'
 >;
 
 export interface HeaderCellProps<R, SR> extends SharedHeaderRowProps<R, SR> {
@@ -87,6 +91,7 @@ export interface HeaderCellProps<R, SR> extends SharedHeaderRowProps<R, SR> {
   colSpan: number;
   rowIdx: number;
   isCellActive: boolean;
+  isColumnSelected: boolean;
   draggedColumnKey: string | undefined;
   setDraggedColumnKey: (draggedColumnKey: string | undefined) => void;
 }
@@ -96,6 +101,10 @@ export default function HeaderCell<R, SR>({
   colSpan,
   rowIdx,
   isCellActive,
+  isColumnSelected,
+  enableCellSelection,
+  onHeaderCellMouseDown,
+  onHeaderCellContextMenu,
   onColumnResize,
   onColumnResizeEnd,
   onColumnsReorder,
@@ -130,7 +139,8 @@ export default function HeaderCell<R, SR>({
     resizable && cellResizableClassname,
     draggable && cellDraggableClassname,
     isDragging && cellDraggingClassname,
-    isOver && cellOverClassname
+    isOver && cellOverClassname,
+    isColumnSelected && headerCellRangeSelectedClassname
   );
 
   function onSort(ctrlClick: boolean) {
@@ -178,13 +188,24 @@ export default function HeaderCell<R, SR>({
     }
   }
 
-  function onMouseDown() {
+  function onMouseDown(event: React.MouseEvent<HTMLDivElement>) {
     setPosition({ idx: column.idx, rowIdx });
+    if (enableCellSelection) {
+      onHeaderCellMouseDown(column, event);
+    }
   }
 
   function onClick(event: React.MouseEvent<HTMLSpanElement>) {
-    if (sortable) {
+    // with cell selection, clicking the header selects the column, like in a spreadsheet,
+    // and the column can still be sorted with Enter or Space, or with `onSortColumnsChange`
+    if (sortable && !enableCellSelection) {
       onSort(event.ctrlKey || event.metaKey);
+    }
+  }
+
+  function onContextMenu(event: React.MouseEvent<HTMLDivElement>) {
+    if (enableCellSelection) {
+      onHeaderCellContextMenu(column, event);
     }
   }
 
@@ -308,6 +329,7 @@ export default function HeaderCell<R, SR>({
         onMouseDown={onMouseDown}
         onFocus={handleFocus}
         onClick={onClick}
+        onContextMenu={onContextMenu}
         onKeyDown={onKeyDown}
         onKeyUp={endKeyboardResize}
         onBlur={endKeyboardResize}

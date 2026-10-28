@@ -1,5 +1,6 @@
 export * from './useActivePosition';
 export * from './useCalculatedColumns';
+export * from './useCellSelection';
 export * from './useColumnWidths';
 export * from './useGridDimensions';
 export * from './useLatestFunc';

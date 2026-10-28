@@ -11,6 +11,8 @@ export { DataGridRenderersContext } from './DataGridRenderersContext';
 export { Row } from './Row';
 export { Cell } from './Cell';
 export * from './Columns';
+export { RowHeaderColumn } from './RowHeaderColumn';
+export { ROW_HEADER_COLUMN_KEY } from './utils/cellSelectionUtils';
 export * from './cellRenderers';
 export { renderTextEditor } from './editors/renderTextEditor';
 export { renderHeaderCell } from './renderHeaderCell';
@@ -26,6 +28,9 @@ export type {
   CellMouseArgs,
   CellMouseEvent,
   CellPasteArgs,
+  CellRange,
+  CellSelection,
+  CellSelectionContextMenuArgs,
   ColSpanArgs,
   Column,
   ColumnFrozen,
@@ -50,6 +55,8 @@ export type {
   RenderSummaryCellContentProps,
   RowHeightArgs,
   RowsChangeData,
+  SelectedCellIntervals,
+  SelectedCells,
   SelectHeaderRowEvent,
   SelectRowEvent,
   SetActivePositionOptions,

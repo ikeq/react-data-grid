@@ -2,8 +2,16 @@ import { memo, type MouseEvent } from 'react';
 import { css } from 'ecij';
 
 import { useRovingTabIndex } from './hooks';
-import { createCellEvent, getCellClassname, getCellStyle, isCellEditableUtil } from './utils';
+import {
+  createCellEvent,
+  getCellClassname,
+  getCellStyle,
+  isCellEditableUtil,
+  isCellSelectionUtilityColumn,
+  ROW_HEADER_COLUMN_KEY
+} from './utils';
 import type { CellMouseEventHandler, RenderCellProps } from './types';
+import { cellRangeSelectedClassname, headerCellRangeSelectedClassname } from './style/cell';
 
 const cellDraggedOver = css`
   @layer rdg.Cell {
@@ -21,6 +29,7 @@ function Cell<R, SR>({
   column,
   colSpan,
   isCellActive,
+  isCellSelected = false,
   isDraggedOver,
   row,
   rowIdx,
@@ -41,9 +50,18 @@ function Cell<R, SR>({
   const { tabIndex, childTabIndex, onFocus } = useRovingTabIndex(isCellActive);
 
   const { cellClass } = column;
+  let selectedClassname: string | undefined;
+  if (isCellSelected) {
+    if (column.key === ROW_HEADER_COLUMN_KEY) {
+      selectedClassname = headerCellRangeSelectedClassname;
+    } else if (!isCellSelectionUtilityColumn(column.key)) {
+      selectedClassname = cellRangeSelectedClassname;
+    }
+  }
   className = getCellClassname(
     column,
     isDraggedOver && cellDraggedOverClassname,
+    selectedClassname,
     typeof cellClass === 'function' ? cellClass(row) : cellClass,
     className
   );

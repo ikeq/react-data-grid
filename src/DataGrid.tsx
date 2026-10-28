@@ -8,6 +8,7 @@ import {
   RowSelectionChangeContext,
   useActivePosition,
   useCalculatedColumns,
+  useCellSelection,
   useColumnWidths,
   useGridDimensions,
   useLatestFunc,
@@ -42,9 +43,13 @@ import type {
   CellCopyArgs,
   CellKeyboardEvent,
   CellKeyDownArgs,
+  CellMouseArgs,
+  CellMouseEvent,
   CellMouseEventHandler,
   CellNavigationMode,
   CellPasteArgs,
+  CellSelection,
+  CellSelectionContextMenuArgs,
   PositionChangeArgs,
   Column,
   ColumnOrColumnGroup,
@@ -55,6 +60,7 @@ import type {
   Position,
   Renderers,
   RowsChangeData,
+  SelectedCells,
   SetActivePositionOptions,
   SelectHeaderRowEvent,
   SelectRowEvent,
@@ -68,7 +74,11 @@ import GroupedColumnHeaderRow from './GroupedColumnHeaderRow';
 import HeaderRow from './HeaderRow';
 import { defaultRenderRow } from './Row';
 import { default as defaultRenderSortStatus } from './sortStatus';
-import { cellDragHandleClassname, cellDragHandleFrozenClassname } from './style/cell';
+import {
+  cellDragHandleClassname,
+  cellDragHandleFrozenClassname,
+  cellSelectingClassname
+} from './style/cell';
 import {
   rootClassname,
   frozenColumnShadowEndClassname,
@@ -95,6 +105,14 @@ export interface DataGridHandle {
   element: HTMLDivElement | null;
   scrollToCell: (position: PartialPosition) => void;
   setActivePosition: (position: Position, options?: SetActivePositionOptions) => void;
+  /** Returns the selected rows and columns of each range of the cell selection */
+  // the handle isn't generic, cast the result to `SelectedCells<Row>[]`
+  // oxlint-disable-next-line typescript/no-explicit-any
+  getSelectedCells: () => SelectedCells<any, any>[];
+  /** Sets the cell selection, `[]` clears it */
+  setCellSelection: (cellSelection: CellSelection) => void;
+  /** Selects all the cells */
+  selectAllCells: () => void;
 }
 
 type SharedDivProps = Pick<
@@ -166,6 +184,29 @@ export interface DataGridProps<R, SR = unknown, K extends Key = Key> extends Sha
   onSortColumnsChange?: Maybe<(sortColumns: SortColumn[]) => void>;
   /** Default options applied to all columns */
   defaultColumnOptions?: Maybe<DefaultColumnOptions<NoInfer<R>, NoInfer<SR>>>;
+  /**
+   * Enables spreadsheet-like cell selection:
+   * drag over cells to select a range, Shift + click or Shift + arrow keys to extend it, Ctrl/Cmd + click to add a range,
+   * click or drag over header cells to select columns, and over `RowHeaderColumn` cells to select rows.
+   * Clicking a header cell selects its column instead of sorting it.
+   * @default false
+   */
+  enableCellSelection?: Maybe<boolean>;
+  /** The selected ranges, to control the cell selection. The grid manages it when `undefined` */
+  cellSelection?: Maybe<CellSelection>;
+  /** Callback triggered when the cell selection changes */
+  onCellSelectionChange?: Maybe<(cellSelection: CellSelection) => void>;
+  /**
+   * Callback triggered when a cell, a row header cell, or a header cell is right-clicked, with `enableCellSelection`.
+   * Like in a spreadsheet, right-clicking outside of the selection first selects the cell, row, or column.
+   * Call `event.preventDefault()` to replace the browser's context menu with your own.
+   */
+  onCellSelectionContextMenu?: Maybe<
+    (
+      args: CellSelectionContextMenuArgs<NoInfer<R>, NoInfer<SR>>,
+      event: React.MouseEvent<HTMLDivElement>
+    ) => void
+  >;
 
   /**
    * Event props
@@ -253,6 +294,10 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     sortColumns,
     onSortColumnsChange,
     defaultColumnOptions,
+    enableCellSelection: rawEnableCellSelection,
+    cellSelection: rawCellSelection,
+    onCellSelectionChange,
+    onCellSelectionContextMenu,
     // Event props
     onCellMouseDown,
     onCellClick,
@@ -302,6 +347,7 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     renderers?.renderCheckbox ?? contextRenderers?.renderCheckbox ?? defaultRenderCheckbox;
   const noRowsFallback = renderers?.noRowsFallback ?? contextRenderers?.noRowsFallback;
   const enableVirtualization = rawEnableVirtualization ?? true;
+  const enableCellSelection = rawEnableCellSelection ?? false;
   const direction = rawDirection ?? 'ltr';
 
   /**
@@ -464,6 +510,34 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     enableVirtualization
   });
 
+  const {
+    isSelecting,
+    selectedColumnIntervals,
+    getRowSelectedIntervals,
+    getSelectedCells,
+    setCellSelection,
+    selectAll,
+    collapseSelection,
+    extendSelection,
+    handleCellMouseDown: handleCellSelectionMouseDown,
+    handleCellContextMenu: handleCellSelectionContextMenu,
+    handleHeaderCellMouseDown,
+    handleHeaderCellContextMenu
+  } = useCellSelection<R, SR>({
+    enabled: enableCellSelection,
+    gridRef,
+    rows,
+    columns,
+    rawSelection: rawCellSelection,
+    onSelectionChange: onCellSelectionChange,
+    onContextMenu: onCellSelectionContextMenu,
+    headerRowsHeight,
+    headerRowHeight,
+    topSummaryRowsHeight: topSummaryRowsCount * summaryRowHeight,
+    bottomSummaryRowsHeight: bottomSummaryRowsCount * summaryRowHeight,
+    findRowIdx
+  });
+
   const { viewportColumns, mapViewportColumns, mapViewportColumnsOutsideOfViewport } =
     useViewportColumns({
       columns,
@@ -498,14 +572,21 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
   const handleColumnResizeEndLatest = useLatestFunc(handleColumnResizeEnd);
   const onColumnsReorderLatest = useLatestFunc(onColumnsReorder);
   const onSortColumnsChangeLatest = useLatestFunc(onSortColumnsChange);
-  const onCellMouseDownLatest = useLatestFunc(onCellMouseDown);
+  const onCellMouseDownLatest = useLatestFunc(
+    enableCellSelection ? handleCellMouseDown : onCellMouseDown
+  );
   const onCellClickLatest = useLatestFunc(onCellClick);
   const onCellDoubleClickLatest = useLatestFunc(onCellDoubleClick);
-  const onCellContextMenuLatest = useLatestFunc(onCellContextMenu);
+  const onCellContextMenuLatest = useLatestFunc(
+    enableCellSelection ? handleCellContextMenu : onCellContextMenu
+  );
+  const handleHeaderCellMouseDownLatest = useLatestFunc(handleHeaderCellMouseDown);
+  const handleHeaderCellContextMenuLatest = useLatestFunc(handleHeaderCellContextMenu);
   const selectHeaderRowLatest = useLatestFunc(selectHeaderRow);
   const selectRowLatest = useLatestFunc(selectRow);
   const updateRowLatest = useLatestFunc(updateRow);
   const setPositionLatest = useLatestFunc(setPosition);
+  const scrollToCellLatest = useLatestFunc(scrollToCell);
   const selectHeaderCellLatest = useLatestFunc(selectHeaderCell);
 
   /**
@@ -513,30 +594,54 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
    */
   useImperativeHandle(ref, (): DataGridHandle => ({
     element: gridRef.current,
-    scrollToCell({ idx, rowIdx }) {
-      // frozen columns are always visible — scrolling to them is a no-op
-      const scrollToIdx =
-        idx != null &&
-        idx > lastStartFrozenColumnIndex &&
-        (firstEndFrozenColumnIndex === -1 || idx < firstEndFrozenColumnIndex) &&
-        idx < columns.length
-          ? idx
-          : undefined;
-      const scrollToRowIdx =
-        rowIdx != null && validatePosition({ idx: 0, rowIdx }).isPositionInViewport
-          ? rowIdx + headerAndTopSummaryRowsCount
-          : undefined;
-
-      if (scrollToIdx != null || scrollToRowIdx != null) {
-        setScrollToPosition({ idx: scrollToIdx, rowIdx: scrollToRowIdx });
-      }
-    },
-    setActivePosition: setPositionLatest
+    scrollToCell: scrollToCellLatest,
+    setActivePosition: setPositionLatest,
+    getSelectedCells: () => getSelectedCells(),
+    setCellSelection,
+    selectAllCells: selectAll
   }));
+
+  function scrollToCell({ idx, rowIdx }: PartialPosition) {
+    // frozen columns are always visible — scrolling to them is a no-op
+    const scrollToIdx =
+      idx != null &&
+      idx > lastStartFrozenColumnIndex &&
+      (firstEndFrozenColumnIndex === -1 || idx < firstEndFrozenColumnIndex) &&
+      idx < columns.length
+        ? idx
+        : undefined;
+    const scrollToRowIdx =
+      rowIdx != null && validatePosition({ idx: 0, rowIdx }).isPositionInViewport
+        ? rowIdx + headerAndTopSummaryRowsCount
+        : undefined;
+
+    if (scrollToIdx != null || scrollToRowIdx != null) {
+      setScrollToPosition({ idx: scrollToIdx, rowIdx: scrollToRowIdx });
+    }
+  }
 
   /**
    * event handlers
    */
+  function handleCellMouseDown(args: CellMouseArgs<R, SR>, event: CellMouseEvent) {
+    onCellMouseDown?.(args, event);
+    handleCellSelectionMouseDown(args, event);
+  }
+
+  function handleCellContextMenu(args: CellMouseArgs<R, SR>, event: CellMouseEvent) {
+    onCellContextMenu?.(args, event);
+    handleCellSelectionContextMenu(args, event);
+  }
+
+  function getPageRowIdx(rowIdx: number, isPageDown: boolean) {
+    if (isPageDown) {
+      const nextRowY = getRowTop(rowIdx) + clientHeight;
+      return nextRowY < totalRowHeight ? findRowIdx(nextRowY) : rows.length - 1;
+    }
+    const nextRowY = getRowTop(rowIdx) + getRowHeight(rowIdx) - clientHeight;
+    return nextRowY > 0 ? findRowIdx(nextRowY) : 0;
+  }
+
   function selectHeaderRow(args: SelectHeaderRowEvent) {
     if (!onSelectedRowsChange) return;
 
@@ -623,6 +728,20 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     const isRowEvent = isTreeGrid && target.role === 'row';
 
     if (!isCellEvent && !isRowEvent) return;
+
+    if (
+      enableCellSelection &&
+      isCellEvent &&
+      isCtrlKeyHeldDown(event) &&
+      !event.shiftKey &&
+      !event.altKey &&
+      event.key.toLowerCase() === 'a'
+    ) {
+      // select all the cells instead of the page's text
+      event.preventDefault();
+      selectAll();
+      return;
+    }
 
     switch (event.key) {
       case 'ArrowUp':
@@ -915,6 +1034,22 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     event.preventDefault();
 
     const ctrlKey = isCtrlKeyHeldDown(event);
+
+    if (enableCellSelection && shiftKey && key !== 'Tab' && activePositionIsCellInViewport) {
+      // extend the selection, the active cell stays where the selection started
+      const lead = extendSelection(
+        key,
+        ctrlKey,
+        activePosition,
+        getPageRowIdx,
+        direction === 'rtl'
+      );
+      if (lead !== undefined) {
+        scrollToCell(lead);
+        return;
+      }
+    }
+
     const nextPosition = getNextPosition(key, ctrlKey, shiftKey);
     if (isSamePosition(activePosition, nextPosition)) return;
 
@@ -936,6 +1071,7 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
     });
 
     setPosition(nextActivePosition, { shouldFocus: true });
+    collapseSelection(nextActivePosition);
   }
 
   function getDraggedOverCellIdx(currentRowIdx: number): number | undefined {
@@ -1148,6 +1284,7 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
       gridRowStart,
       activeCellIdx: isActiveRow ? activeIdx : undefined,
       draggedOverCellIdx: getDraggedOverCellIdx(rowIdx),
+      selectedCellIntervals: getRowSelectedIntervals(rowIdx),
       onRowChange: updateRowLatest,
       setActivePosition: setPositionLatest,
       activeCellEditor: getCellEditor(rowIdx),
@@ -1186,13 +1323,18 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
       aria-labelledby={ariaLabelledBy}
       aria-description={ariaDescription}
       aria-describedby={ariaDescribedBy}
-      aria-multiselectable={isSelectable ? true : undefined}
+      aria-multiselectable={isSelectable || enableCellSelection ? true : undefined}
       aria-colcount={columns.length}
       aria-rowcount={ariaRowCount}
       // Scrollable containers without tabIndex are keyboard focusable in Chrome only if there is no focusable element inside,
       // whereas they are always focusable in Firefox. We need to set tabIndex to have consistent behavior across browsers.
       tabIndex={-1}
-      className={classnames(rootClassname, isDragging && viewportDraggingClassname, className)}
+      className={classnames(
+        rootClassname,
+        isDragging && viewportDraggingClassname,
+        isSelecting && cellSelectingClassname,
+        className
+      )}
       style={{
         ...style,
         // set scrollPadding to correctly scroll to non-sticky cells/rows
@@ -1247,6 +1389,10 @@ export function DataGrid<R, SR = unknown, K extends Key = Key>(props: DataGridPr
               setPosition={selectHeaderCellLatest}
               shouldFocusGrid={!activePositionIsInActiveBounds}
               direction={direction}
+              enableCellSelection={enableCellSelection}
+              selectedColumnIntervals={selectedColumnIntervals}
+              onHeaderCellMouseDown={handleHeaderCellMouseDownLatest}
+              onHeaderCellContextMenu={handleHeaderCellContextMenuLatest}
             />
           </HeaderRowSelectionContext>
         </HeaderRowSelectionChangeContext>

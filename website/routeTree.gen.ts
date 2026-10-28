@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AllFeaturesRouteImport } from './routes/AllFeatures'
 import { Route as AnimationRouteImport } from './routes/Animation'
 import { Route as CellNavigationRouteImport } from './routes/CellNavigation'
+import { Route as CellRangeSelectionRouteImport } from './routes/CellRangeSelection'
 import { Route as ColumnGroupingRouteImport } from './routes/ColumnGrouping'
 import { Route as ColumnSpanningRouteImport } from './routes/ColumnSpanning'
 import { Route as ColumnsReorderingRouteImport } from './routes/ColumnsReordering'
@@ -25,6 +26,7 @@ import { Route as MasterDetailRouteImport } from './routes/MasterDetail'
 import { Route as MillionCellsRouteImport } from './routes/MillionCells'
 import { Route as NoRowsRouteImport } from './routes/NoRows'
 import { Route as ResizableGridRouteImport } from './routes/ResizableGrid'
+import { Route as RowColumnSelectionRouteImport } from './routes/RowColumnSelection'
 import { Route as RowGroupingRouteImport } from './routes/RowGrouping'
 import { Route as RowsReorderingRouteImport } from './routes/RowsReordering'
 import { Route as ScrollToCellRouteImport } from './routes/ScrollToCell'
@@ -49,6 +51,11 @@ const AnimationRoute = AnimationRouteImport.update({
 const CellNavigationRoute = CellNavigationRouteImport.update({
   id: '/CellNavigation',
   path: '/CellNavigation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CellRangeSelectionRoute = CellRangeSelectionRouteImport.update({
+  id: '/CellRangeSelection',
+  path: '/CellRangeSelection',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ColumnGroupingRoute = ColumnGroupingRouteImport.update({
@@ -111,6 +118,11 @@ const ResizableGridRoute = ResizableGridRouteImport.update({
   path: '/ResizableGrid',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RowColumnSelectionRoute = RowColumnSelectionRouteImport.update({
+  id: '/RowColumnSelection',
+  path: '/RowColumnSelection',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RowGroupingRoute = RowGroupingRouteImport.update({
   id: '/RowGrouping',
   path: '/RowGrouping',
@@ -142,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/AllFeatures': typeof AllFeaturesRoute
   '/Animation': typeof AnimationRoute
   '/CellNavigation': typeof CellNavigationRoute
+  '/CellRangeSelection': typeof CellRangeSelectionRoute
   '/ColumnGrouping': typeof ColumnGroupingRoute
   '/ColumnSpanning': typeof ColumnSpanningRoute
   '/ColumnsReordering': typeof ColumnsReorderingRoute
@@ -154,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/MillionCells': typeof MillionCellsRoute
   '/NoRows': typeof NoRowsRoute
   '/ResizableGrid': typeof ResizableGridRoute
+  '/RowColumnSelection': typeof RowColumnSelectionRoute
   '/RowGrouping': typeof RowGroupingRoute
   '/RowsReordering': typeof RowsReorderingRoute
   '/ScrollToCell': typeof ScrollToCellRoute
@@ -165,6 +179,7 @@ export interface FileRoutesByTo {
   '/AllFeatures': typeof AllFeaturesRoute
   '/Animation': typeof AnimationRoute
   '/CellNavigation': typeof CellNavigationRoute
+  '/CellRangeSelection': typeof CellRangeSelectionRoute
   '/ColumnGrouping': typeof ColumnGroupingRoute
   '/ColumnSpanning': typeof ColumnSpanningRoute
   '/ColumnsReordering': typeof ColumnsReorderingRoute
@@ -177,6 +192,7 @@ export interface FileRoutesByTo {
   '/MillionCells': typeof MillionCellsRoute
   '/NoRows': typeof NoRowsRoute
   '/ResizableGrid': typeof ResizableGridRoute
+  '/RowColumnSelection': typeof RowColumnSelectionRoute
   '/RowGrouping': typeof RowGroupingRoute
   '/RowsReordering': typeof RowsReorderingRoute
   '/ScrollToCell': typeof ScrollToCellRoute
@@ -189,6 +205,7 @@ export interface FileRoutesById {
   '/AllFeatures': typeof AllFeaturesRoute
   '/Animation': typeof AnimationRoute
   '/CellNavigation': typeof CellNavigationRoute
+  '/CellRangeSelection': typeof CellRangeSelectionRoute
   '/ColumnGrouping': typeof ColumnGroupingRoute
   '/ColumnSpanning': typeof ColumnSpanningRoute
   '/ColumnsReordering': typeof ColumnsReorderingRoute
@@ -201,6 +218,7 @@ export interface FileRoutesById {
   '/MillionCells': typeof MillionCellsRoute
   '/NoRows': typeof NoRowsRoute
   '/ResizableGrid': typeof ResizableGridRoute
+  '/RowColumnSelection': typeof RowColumnSelectionRoute
   '/RowGrouping': typeof RowGroupingRoute
   '/RowsReordering': typeof RowsReorderingRoute
   '/ScrollToCell': typeof ScrollToCellRoute
@@ -214,6 +232,7 @@ export interface FileRouteTypes {
     | '/AllFeatures'
     | '/Animation'
     | '/CellNavigation'
+    | '/CellRangeSelection'
     | '/ColumnGrouping'
     | '/ColumnSpanning'
     | '/ColumnsReordering'
@@ -226,6 +245,7 @@ export interface FileRouteTypes {
     | '/MillionCells'
     | '/NoRows'
     | '/ResizableGrid'
+    | '/RowColumnSelection'
     | '/RowGrouping'
     | '/RowsReordering'
     | '/ScrollToCell'
@@ -237,6 +257,7 @@ export interface FileRouteTypes {
     | '/AllFeatures'
     | '/Animation'
     | '/CellNavigation'
+    | '/CellRangeSelection'
     | '/ColumnGrouping'
     | '/ColumnSpanning'
     | '/ColumnsReordering'
@@ -249,6 +270,7 @@ export interface FileRouteTypes {
     | '/MillionCells'
     | '/NoRows'
     | '/ResizableGrid'
+    | '/RowColumnSelection'
     | '/RowGrouping'
     | '/RowsReordering'
     | '/ScrollToCell'
@@ -260,6 +282,7 @@ export interface FileRouteTypes {
     | '/AllFeatures'
     | '/Animation'
     | '/CellNavigation'
+    | '/CellRangeSelection'
     | '/ColumnGrouping'
     | '/ColumnSpanning'
     | '/ColumnsReordering'
@@ -272,6 +295,7 @@ export interface FileRouteTypes {
     | '/MillionCells'
     | '/NoRows'
     | '/ResizableGrid'
+    | '/RowColumnSelection'
     | '/RowGrouping'
     | '/RowsReordering'
     | '/ScrollToCell'
@@ -284,6 +308,7 @@ export interface RootRouteChildren {
   AllFeaturesRoute: typeof AllFeaturesRoute
   AnimationRoute: typeof AnimationRoute
   CellNavigationRoute: typeof CellNavigationRoute
+  CellRangeSelectionRoute: typeof CellRangeSelectionRoute
   ColumnGroupingRoute: typeof ColumnGroupingRoute
   ColumnSpanningRoute: typeof ColumnSpanningRoute
   ColumnsReorderingRoute: typeof ColumnsReorderingRoute
@@ -296,6 +321,7 @@ export interface RootRouteChildren {
   MillionCellsRoute: typeof MillionCellsRoute
   NoRowsRoute: typeof NoRowsRoute
   ResizableGridRoute: typeof ResizableGridRoute
+  RowColumnSelectionRoute: typeof RowColumnSelectionRoute
   RowGroupingRoute: typeof RowGroupingRoute
   RowsReorderingRoute: typeof RowsReorderingRoute
   ScrollToCellRoute: typeof ScrollToCellRoute
@@ -331,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/CellNavigation'
       fullPath: '/CellNavigation'
       preLoaderRoute: typeof CellNavigationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/CellRangeSelection': {
+      id: '/CellRangeSelection'
+      path: '/CellRangeSelection'
+      fullPath: '/CellRangeSelection'
+      preLoaderRoute: typeof CellRangeSelectionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ColumnGrouping': {
@@ -417,6 +450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResizableGridRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/RowColumnSelection': {
+      id: '/RowColumnSelection'
+      path: '/RowColumnSelection'
+      fullPath: '/RowColumnSelection'
+      preLoaderRoute: typeof RowColumnSelectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/RowGrouping': {
       id: '/RowGrouping'
       path: '/RowGrouping'
@@ -460,6 +500,7 @@ const rootRouteChildren: RootRouteChildren = {
   AllFeaturesRoute: AllFeaturesRoute,
   AnimationRoute: AnimationRoute,
   CellNavigationRoute: CellNavigationRoute,
+  CellRangeSelectionRoute: CellRangeSelectionRoute,
   ColumnGroupingRoute: ColumnGroupingRoute,
   ColumnSpanningRoute: ColumnSpanningRoute,
   ColumnsReorderingRoute: ColumnsReorderingRoute,
@@ -472,6 +513,7 @@ const rootRouteChildren: RootRouteChildren = {
   MillionCellsRoute: MillionCellsRoute,
   NoRowsRoute: NoRowsRoute,
   ResizableGridRoute: ResizableGridRoute,
+  RowColumnSelectionRoute: RowColumnSelectionRoute,
   RowGroupingRoute: RowGroupingRoute,
   RowsReorderingRoute: RowsReorderingRoute,
   ScrollToCellRoute: ScrollToCellRoute,

@@ -27,7 +27,17 @@ import { defaultRenderRow } from './Row';
 
 export interface TreeDataGridProps<R, SR = unknown, K extends Key = Key> extends Omit<
   DataGridProps<R, SR, K>,
-  'columns' | 'role' | 'aria-rowcount' | 'rowHeight' | 'onFill' | 'isRowSelectionDisabled'
+  | 'columns'
+  | 'role'
+  | 'aria-rowcount'
+  | 'rowHeight'
+  | 'onFill'
+  | 'isRowSelectionDisabled'
+  // cell selection doesn't support group rows yet
+  | 'enableCellSelection'
+  | 'cellSelection'
+  | 'onCellSelectionChange'
+  | 'onCellSelectionContextMenu'
 > {
   columns: readonly Column<NoInfer<R>, NoInfer<SR>>[];
   rowHeight?: Maybe<number | ((args: RowHeightArgs<NoInfer<R>>) => number)>;
@@ -435,6 +445,7 @@ export function TreeDataGrid<R, SR = unknown, K extends Key = Key>({
       onCellContextMenu,
       onRowChange,
       draggedOverCellIdx,
+      selectedCellIntervals,
       activeCellEditor,
       isRowSelectionDisabled,
       isTreeGrid,
@@ -480,6 +491,7 @@ export function TreeDataGrid<R, SR = unknown, K extends Key = Key>({
       onCellContextMenu,
       onRowChange,
       draggedOverCellIdx,
+      selectedCellIntervals,
       activeCellEditor,
       isRowSelectionDisabled,
       isTreeGrid

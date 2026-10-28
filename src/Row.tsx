@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
 
 import { RowSelectionContext, type RowSelectionContextValue } from './hooks';
-import { classnames } from './utils';
+import { classnames, intervalsOverlap, ROW_HEADER_COLUMN_KEY } from './utils';
 import type { RenderRowProps } from './types';
 import { useRenderers } from './DataGridRenderersContext';
 import { rowClassname, rowActiveClassname } from './style/row';
@@ -14,6 +14,7 @@ function Row<R, SR>({
   isRowSelectionDisabled,
   isRowSelected,
   draggedOverCellIdx,
+  selectedCellIntervals,
   row,
   mapViewportColumns,
   activeCellEditor,
@@ -55,6 +56,11 @@ function Row<R, SR>({
         rowIdx,
         isDraggedOver: draggedOverCellIdx === column.idx,
         isCellActive,
+        isCellSelected:
+          selectedCellIntervals !== undefined &&
+          // the row header cell is highlighted when any cell of the row is selected
+          (column.key === ROW_HEADER_COLUMN_KEY ||
+            intervalsOverlap(selectedCellIntervals, column.idx, column.idx + colSpan - 1)),
         onCellMouseDown,
         onCellClick,
         onCellDoubleClick,

@@ -149,6 +149,44 @@ export interface Position {
   readonly rowIdx: number;
 }
 
+/**
+ * A rectangle of selected cells, with inclusive bounds.
+ * `startIdx <= endIdx` and `startRowIdx <= endRowIdx` always hold.
+ * Only cells in `rows` can be selected: header and summary rows are never part of a range.
+ */
+export interface CellRange {
+  readonly startIdx: number;
+  readonly endIdx: number;
+  readonly startRowIdx: number;
+  readonly endRowIdx: number;
+}
+
+/** The selected ranges. Ctrl/Cmd + click or drag adds ranges, like in a spreadsheet */
+export type CellSelection = readonly CellRange[];
+
+/** Selected columns of a single row: inclusive `[startIdx, endIdx]` column index intervals */
+export type SelectedCellIntervals = readonly (readonly [startIdx: number, endIdx: number])[];
+
+export interface SelectedCells<TRow, TSummaryRow = unknown> {
+  /** The range that the cells come from */
+  readonly range: CellRange;
+  /** The selected columns, without the row header and select columns */
+  readonly columns: readonly CalculatedColumn<TRow, TSummaryRow>[];
+  /** The selected rows */
+  readonly rows: readonly TRow[];
+}
+
+export interface CellSelectionContextMenuArgs<TRow, TSummaryRow = unknown> {
+  /** The selection, updated to include the right-clicked cell, row, or column */
+  readonly selection: CellSelection;
+  /** The column of the right-clicked cell or header cell, `undefined` for the row header column's cells */
+  readonly column: CalculatedColumn<TRow, TSummaryRow> | undefined;
+  /** Where the context menu was opened */
+  readonly target: 'CELL' | 'ROW_HEADER' | 'COLUMN_HEADER' | 'ALL';
+  /** Returns the selected rows and columns of each range */
+  readonly getSelectedCells: () => SelectedCells<TRow, TSummaryRow>[];
+}
+
 export interface RenderCellContentProps<TRow, TSummaryRow = unknown> {
   column: CalculatedColumn<TRow, TSummaryRow>;
   row: TRow;
@@ -206,6 +244,8 @@ export interface RenderCellProps<TRow, TSummaryRow> extends BaseRenderCellProps<
   colSpan: number;
   isDraggedOver: boolean;
   isCellActive: boolean;
+  /** Whether the cell is in the cell selection. For the row header column, whether any cell of the row is selected */
+  isCellSelected?: boolean;
   onRowChange: (column: CalculatedColumn<TRow, TSummaryRow>, rowIdx: number, newRow: TRow) => void;
 }
 
@@ -323,6 +363,11 @@ export interface RenderRowProps<TRow, TSummaryRow = unknown> extends BaseRenderR
 > {
   row: TRow;
   draggedOverCellIdx: number | undefined;
+  /**
+   * The selected column intervals of the row, `undefined` when none of its cells are selected.
+   * The array keeps its identity while the row's selection doesn't change, so memoized rows don't re-render.
+   */
+  selectedCellIntervals?: SelectedCellIntervals | undefined;
   activeCellEditor: ReactElement<EditCellProps<TRow, TSummaryRow>> | undefined;
   onRowChange: (column: CalculatedColumn<TRow, TSummaryRow>, rowIdx: number, newRow: TRow) => void;
   rowClass: Maybe<(row: TRow, rowIdx: number) => Maybe<string>>;

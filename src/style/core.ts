@@ -29,6 +29,10 @@ const root = css`
     --rdg-row-selected-hover-background-color: light-dark(hsl(207deg 76% 88%), hsl(207deg 76% 38%));
     --rdg-checkbox-focus-color: hsl(207deg 100% 69%);
     --rdg-frozen-column-shadow-color: light-dark(rgb(0 0 0 / 15%), rgb(0 0 0 / 40%));
+    --rdg-cell-selection-background-color: light-dark(hsl(207deg 76% 92%), hsl(207deg 50% 26%));
+    --rdg-header-selection-background-color: light-dark(hsl(207deg 45% 85%), hsl(207deg 35% 24%));
+    --rdg-header-selection-color: inherit;
+    --rdg-row-header-color: light-dark(#666, #999);
 
     /* forced colors mode replaces non-system colors, which would hide the drag handle */
     @media (forced-colors: active) {
