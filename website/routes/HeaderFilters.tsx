@@ -5,7 +5,6 @@ import { css } from 'ecij';
 
 import { DataGrid, type Column, type RenderHeaderCellContentProps } from '../../src';
 import type { Omit } from '../../src/types';
-import { useDirection } from '../directionContext';
 
 export const Route = createFileRoute('/HeaderFilters')({
   component: HeaderFilters
@@ -82,7 +81,6 @@ function selectStopPropagation(event: React.KeyboardEvent<HTMLSelectElement>) {
 }
 
 function HeaderFilters() {
-  const direction = useDirection();
   const [rows] = useState(createRows);
   const [filters, setFilters] = useState((): Filter => ({
     task: '',
@@ -297,7 +295,6 @@ function HeaderFilters() {
           columns={columns}
           rows={filteredRows}
           headerRowHeight={filters.enabled ? 70 : undefined}
-          direction={direction}
           style={{
             scrollbarGutter: 'stable'
           }}

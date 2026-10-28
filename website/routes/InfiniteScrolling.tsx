@@ -4,7 +4,6 @@ import { createFileRoute } from '@tanstack/react-router';
 import { css } from 'ecij';
 
 import { DataGrid, type Column } from '../../src';
-import { useDirection } from '../directionContext';
 
 export const Route = createFileRoute('/InfiniteScrolling')({
   component: InfiniteScrolling
@@ -94,7 +93,6 @@ function loadMoreRows(newRowsCount: number, length: number): Promise<Row[]> {
 }
 
 function InfiniteScrolling() {
-  const direction = useDirection();
   const [rows, setRows] = useState(() => createRows(50));
   const [isPending, startTransition] = useTransition();
 
@@ -117,11 +115,9 @@ function InfiniteScrolling() {
         columns={columns}
         rows={rows}
         rowKeyGetter={rowKeyGetter}
-        onRowsChange={setRows}
         rowHeight={30}
         onScroll={handleScroll}
         className="fill-grid"
-        direction={direction}
       />
       {isPending && <div className={loadMoreRowsClassname}>Loading more rows...</div>}
     </>

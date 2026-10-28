@@ -1,9 +1,6 @@
-import { useState } from 'react';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { css } from 'ecij';
 
-import type { Direction } from '../../src';
-import { DirectionContext } from '../directionContext';
 import Nav from '../Nav';
 
 export const Route = createRootRoute({
@@ -20,14 +17,12 @@ const mainClassname = css`
 `;
 
 function Root() {
-  const [direction, setDirection] = useState<Direction>('ltr');
-
   return (
-    <DirectionContext value={direction}>
-      <Nav direction={direction} onDirectionChange={setDirection} />
-      <main dir={direction} className={mainClassname}>
+    <>
+      <Nav />
+      <main className={mainClassname}>
         <Outlet />
       </main>
-    </DirectionContext>
+    </>
   );
 }

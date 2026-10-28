@@ -4,80 +4,64 @@ import { createFileRoute } from '@tanstack/react-router';
 import { css } from 'ecij';
 
 import { DataGrid, RowHeaderColumn } from '../../src';
-import type { CellSelectionContextMenuArgs, Column, SelectedCells, SortColumn } from '../../src';
-import { renderSortableHeaderCell, ContextMenu, type ContextMenuItem } from '../components';
+import type {
+  CellSelection as CellSelectionValue,
+  CellSelectionContextMenuArgs,
+  Column,
+  SelectedCells,
+  SortColumn
+} from '../../src';
+import { ContextMenu, renderSortableHeaderCell, type ContextMenuItem } from '../components';
 import { compare, copySelectedCellsToClipboard, exportSelectedCellsToCsv } from '../utils';
-import { useDirection } from '../directionContext';
 
-export const Route = createFileRoute('/RowColumnSelection')({
-  component: RowColumnSelection
+export const Route = createFileRoute('/CellSelection')({
+  component: CellSelection
 });
 
 const toolbarClassname = css`
+  display: flex;
+  gap: 16px;
+  align-items: center;
   margin-block-end: 8px;
 `;
 
 interface Row {
   id: number;
-  task: string;
-  assignee: string;
-  priority: string;
-  status: string;
-  progress: number;
-  dueDate: string;
+  name: string;
+  email: string;
+  city: string;
+  country: string;
+  company: string;
+  jobTitle: string;
+  price: number;
+  quantity: number;
 }
 
 function createRows(): readonly Row[] {
-  return Array.from({ length: 500 }, (_, id) => ({
+  return Array.from({ length: 1000 }, (_, id) => ({
     id,
-    task: `Task #${id + 1}`,
-    assignee: faker.person.fullName(),
-    priority: faker.helpers.arrayElement(['Critical', 'High', 'Medium', 'Low']),
-    status: faker.helpers.arrayElement(['To Do', 'In Progress', 'Review', 'Done']),
-    progress: faker.number.int({ min: 0, max: 100 }),
-    dueDate: faker.date.future().toISOString().slice(0, 10)
+    name: faker.person.fullName(),
+    email: faker.internet.email(),
+    city: faker.location.city(),
+    country: faker.location.country(),
+    company: faker.company.name(),
+    jobTitle: faker.person.jobTitle(),
+    price: Number(faker.commerce.price()),
+    quantity: faker.number.int({ min: 1, max: 100 })
   }));
 }
 
 const columns: readonly Column<Row>[] = [
   // row numbers: click or drag to select rows, click its header cell to select all
   RowHeaderColumn,
-  {
-    key: 'task',
-    name: 'Task',
-    width: 120,
-    sortable: true,
-    renderHeaderCell: renderSortableHeaderCell
-  },
-  { key: 'assignee', name: 'Assignee', sortable: true, renderHeaderCell: renderSortableHeaderCell },
-  {
-    key: 'priority',
-    name: 'Priority',
-    width: 110,
-    sortable: true,
-    renderHeaderCell: renderSortableHeaderCell
-  },
-  {
-    key: 'status',
-    name: 'Status',
-    width: 120,
-    sortable: true,
-    renderHeaderCell: renderSortableHeaderCell
-  },
-  {
-    key: 'progress',
-    name: 'Progress',
-    width: 100,
-    sortable: true,
-    renderHeaderCell: renderSortableHeaderCell
-  },
-  {
-    key: 'dueDate',
-    name: 'Due Date',
-    width: 120,
-    sortable: true,
-    renderHeaderCell: renderSortableHeaderCell
-  }
+  { key: 'name', name: 'Name', width: 180 },
+  { key: 'email', name: 'Email', width: 240 },
+  { key: 'city', name: 'City', width: 160 },
+  { key: 'country', name: 'Country', width: 180 },
+  { key: 'company', name: 'Company', width: 220 },
+  { key: 'jobTitle', name: 'Job Title', width: 240 },
+  { key: 'price', name: 'Price', width: 100 },
+  { key: 'quantity', name: 'Quantity', width: 100 }
 ];
 
 function rowKeyGetter(row: Row) {
@@ -99,6 +83,14 @@ function sortRows(rows: readonly Row[], sortColumns: readonly SortColumn[]) {
   });
 }
 
+function countCells(cellSelection: CellSelectionValue) {
+  return cellSelection.reduce(
+    (count, range) =>
+      count + (range.endIdx - range.startIdx + 1) * (range.endRowIdx - range.startRowIdx + 1),
+    0
+  );
+}
+
 interface MenuState {
   top: number;
   left: number;
@@ -106,10 +98,10 @@ interface MenuState {
   selectedCells: SelectedCells<Row>[];
 }
 
-function RowColumnSelection() {
-  const direction = useDirection();
+function CellSelection() {
   const [rows] = useState(createRows);
   const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
+  const [cellSelection, setCellSelection] = useState<CellSelectionValue>([]);
   const [menu, setMenu] = useState<MenuState | null>(null);
   const closeMenu = useCallback(() => setMenu(null), []);
   const sortedRows = sortRows(rows, sortColumns);
@@ -118,8 +110,7 @@ function RowColumnSelection() {
   if (menu !== null) {
     const { args, selectedCells } = menu;
     const { column } = args;
-    // clicking a header cell selects the column, so sorting moves to the context menu, like in a spreadsheet
-    if (args.target === 'COLUMN_HEADER' && column?.sortable) {
+    if (args.target === 'COLUMN_HEADER' && column !== undefined) {
       items.push(
         {
           label: `Sort "${String(column.name)}" Ascending`,
@@ -151,20 +142,28 @@ function RowColumnSelection() {
   return (
     <>
       <div className={toolbarClassname}>
-        Click or drag over row numbers to select rows, and over column headers to select columns.
-        Shift + click extends the selection, Ctrl/Cmd + click adds to it, and the top-left cell
-        selects all. Right-click to copy or export the selection, and to sort a column.
+        <span>
+          Click or drag over cells, row numbers, or column headers to select them. Shift + click or
+          Shift + arrow keys extend the selection, Ctrl/Cmd + click adds a range, and the top-left
+          cell or Ctrl/Cmd + A selects all. Right-click to copy, export, or sort.
+        </span>
+        <output>
+          {cellSelection.length} range(s), {countCells(cellSelection)} cell(s)
+        </output>
       </div>
       <DataGrid
-        aria-label="Row and Column Selection Example"
+        aria-label="Cell Selection Example"
         rowKeyGetter={rowKeyGetter}
         columns={columns}
         rows={sortedRows}
+        defaultColumnOptions={{ sortable: true, renderHeaderCell: renderSortableHeaderCell }}
         className="fill-grid"
-        direction={direction}
         sortColumns={sortColumns}
         onSortColumnsChange={setSortColumns}
+        cellSelection={cellSelection}
+        onCellSelectionChange={setCellSelection}
         onCellSelectionContextMenu={(args, event) => {
+          // replace the browser's context menu
           event.preventDefault();
           setMenu({
             top: event.clientY,

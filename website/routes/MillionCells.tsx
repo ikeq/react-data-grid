@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { DataGrid, type Column } from '../../src';
 import { renderCoordinates } from '../renderers';
-import { useDirection } from '../directionContext';
 
 export const Route = createFileRoute('/MillionCells')({
   component: MillionCells
@@ -26,8 +25,6 @@ for (let i = 0; i < 1000; i++) {
 }
 
 function MillionCells() {
-  const direction = useDirection();
-
   return (
     <DataGrid
       aria-label="Million Cells Example"
@@ -35,7 +32,6 @@ function MillionCells() {
       rows={rows}
       rowHeight={22}
       className="fill-grid"
-      direction={direction}
     />
   );
 }
