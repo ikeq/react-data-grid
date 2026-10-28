@@ -1,6 +1,6 @@
 import { css } from 'ecij';
 
-import type { RenderSortIconProps, RenderSortPriorityProps, RenderSortStatusProps } from './types';
+import type { RenderSortIconProps, RenderSortPriorityProps } from './types';
 
 const arrow = css`
   @layer rdg.SortIcon {
@@ -13,15 +13,6 @@ const arrow = css`
 `;
 
 const arrowClassname = `rdg-sort-arrow ${arrow}`;
-
-export default function renderSortStatus({ sortDirection, priority }: RenderSortStatusProps) {
-  return (
-    <>
-      {renderSortIcon({ sortDirection })}
-      {renderSortPriority({ priority })}
-    </>
-  );
-}
 
 export function renderSortIcon({ sortDirection }: RenderSortIconProps) {
   if (sortDirection === undefined) return null;

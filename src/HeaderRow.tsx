@@ -1,10 +1,9 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { css } from 'ecij';
 
 import { classnames, intervalsOverlap, ROW_HEADER_COLUMN_KEY } from './utils';
 import type {
   CalculatedColumn,
-  Direction,
   MapViewportColumns,
   Maybe,
   Position,
@@ -14,25 +13,20 @@ import type {
 import type { DataGridProps } from './DataGrid';
 import HeaderCell from './HeaderCell';
 import { cell, cellFrozenBase, rowHeaderCornerCellClassname } from './style/cell';
-import { rowActiveClassname } from './style/row';
 
 type SharedDataGridProps<R, SR, K extends React.Key> = Pick<
   DataGridProps<R, SR, K>,
-  'sortColumns' | 'onSortColumnsChange' | 'onColumnsReorder'
+  'sortColumns' | 'onSortColumnsChange'
 >;
 
 export interface HeaderRowProps<R, SR, K extends React.Key> extends SharedDataGridProps<R, SR, K> {
-  rowIdx: number;
   mapViewportColumns: MapViewportColumns<R, SR>;
   onColumnResize: (column: CalculatedColumn<R, SR>, width: ResizedWidth) => void;
   onColumnResizeEnd: () => void;
   activeCellIdx: number | undefined;
   setPosition: (position: Position) => void;
   shouldFocusGrid: boolean;
-  direction: Direction;
   headerRowClass: Maybe<string>;
-  /** When enabled, clicking a header cell selects its column instead of sorting it */
-  enableCellSelection: boolean;
   selectedColumnIntervals: SelectedCellIntervals | undefined;
   onHeaderCellMouseDown: (
     column: CalculatedColumn<R, SR>,
@@ -54,14 +48,14 @@ const headerRow = css`
       /* Should have a higher value than 1 to show up above regular cells and the focus sink */
       z-index: 2;
       position: sticky;
-    }
 
-    /*
-     * The line between the header and the data area, the only line in the grid.
-     * It is drawn on the cells of the last header row, which are sticky, so it stays when the rows scroll under them.
-     */
-    &:nth-last-child(1 of .rdg-header-row) > .${cell}:not(.${rowHeaderCornerCellClassname}) {
-      border-block-end: var(--rdg-border-width) solid var(--rdg-border-color);
+      /*
+       * The line between the header and the data area.
+       * It is drawn on the header cells, which are sticky, so it stays when the rows scroll under them.
+       */
+      &:not(.${rowHeaderCornerCellClassname}) {
+        border-block-end: var(--rdg-border-width) solid var(--rdg-border-color);
+      }
     }
 
     & > .${cellFrozenBase} {
@@ -74,65 +68,43 @@ export const headerRowClassname = `rdg-header-row ${headerRow}`;
 
 function HeaderRow<R, SR, K extends React.Key>({
   headerRowClass,
-  rowIdx,
   mapViewportColumns,
   onColumnResize,
   onColumnResizeEnd,
-  onColumnsReorder,
   sortColumns,
   onSortColumnsChange,
   activeCellIdx,
   setPosition,
   shouldFocusGrid,
-  direction,
-  enableCellSelection,
   selectedColumnIntervals,
   onHeaderCellMouseDown,
   onHeaderCellContextMenu
 }: HeaderRowProps<R, SR, K>) {
-  const [draggedColumnKey, setDraggedColumnKey] = useState<string>();
-  const isPositionOnRow = activeCellIdx === -1;
-
-  const cells = mapViewportColumns(
-    activeCellIdx,
-    { type: 'HEADER' },
-    (column, isCellActive, colSpan, index) => (
-      <HeaderCell<R, SR>
-        key={column.key}
-        column={column}
-        colSpan={colSpan}
-        rowIdx={rowIdx}
-        isCellActive={isCellActive}
-        isColumnSelected={
-          column.key !== ROW_HEADER_COLUMN_KEY &&
-          intervalsOverlap(selectedColumnIntervals, column.idx, column.idx + colSpan - 1)
-        }
-        enableCellSelection={enableCellSelection}
-        onHeaderCellMouseDown={onHeaderCellMouseDown}
-        onHeaderCellContextMenu={onHeaderCellContextMenu}
-        onColumnResize={onColumnResize}
-        onColumnResizeEnd={onColumnResizeEnd}
-        onColumnsReorder={onColumnsReorder}
-        onSortColumnsChange={onSortColumnsChange}
-        sortColumns={sortColumns}
-        setPosition={setPosition}
-        shouldFocusGrid={shouldFocusGrid && index === 0}
-        direction={direction}
-        draggedColumnKey={draggedColumnKey}
-        setDraggedColumnKey={setDraggedColumnKey}
-      />
-    )
-  );
+  const cells = mapViewportColumns(activeCellIdx, (column, isCellActive, index) => (
+    <HeaderCell<R, SR>
+      key={column.key}
+      column={column}
+      isCellActive={isCellActive}
+      isColumnSelected={
+        column.key !== ROW_HEADER_COLUMN_KEY &&
+        intervalsOverlap(selectedColumnIntervals, column.idx, column.idx)
+      }
+      onHeaderCellMouseDown={onHeaderCellMouseDown}
+      onHeaderCellContextMenu={onHeaderCellContextMenu}
+      onColumnResize={onColumnResize}
+      onColumnResizeEnd={onColumnResizeEnd}
+      onSortColumnsChange={onSortColumnsChange}
+      sortColumns={sortColumns}
+      setPosition={setPosition}
+      shouldFocusGrid={shouldFocusGrid && index === 0}
+    />
+  ));
 
   return (
     <div
       role="row"
-      aria-rowindex={rowIdx} // aria-rowindex is 1-based
-      className={classnames(
-        headerRowClassname,
-        isPositionOnRow && rowActiveClassname,
-        headerRowClass
-      )}
+      aria-rowindex={1} // aria-rowindex is 1-based
+      className={classnames(headerRowClassname, headerRowClass)}
     >
       {cells}
     </div>

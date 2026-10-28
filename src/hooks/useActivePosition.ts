@@ -1,130 +1,56 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 
-import { focusCell, focusRow } from '../utils';
-import type { CalculatedColumn, Position, StateSetter } from '../types';
+import { focusCell } from '../utils';
+import type { CalculatedColumn, Position } from '../types';
 
-export interface ActivePosition extends Position {
-  readonly mode: 'ACTIVE';
-}
-
-interface EditPosition<R> extends Position {
-  readonly mode: 'EDIT';
-  readonly row: R;
-  readonly originalRow: R;
-}
-
-const initialActivePosition: ActivePosition = {
+const initialActivePosition: Position = {
   idx: -1,
-  // use -Infinity to avoid issues when adding header rows or top summary rows
-  rowIdx: Number.NEGATIVE_INFINITY,
-  mode: 'ACTIVE'
+  // use -Infinity so the initial position is never a valid position
+  rowIdx: Number.NEGATIVE_INFINITY
 };
 
 export function useActivePosition<R, SR>({
   gridRef,
   columns,
   rows,
-  isTreeGrid,
   maxColIdx,
   minRowIdx,
-  maxRowIdx,
-  setDraggedOverRowIdx
+  maxRowIdx
 }: {
   gridRef: React.RefObject<HTMLDivElement | null>;
   columns: readonly CalculatedColumn<R, SR>[];
   rows: readonly R[];
-  isTreeGrid: boolean;
   maxColIdx: number;
   minRowIdx: number;
   maxRowIdx: number;
-  setDraggedOverRowIdx: StateSetter<number | undefined>;
 }) {
-  const [activePosition, setActivePosition] = useState<ActivePosition | EditPosition<R>>(
-    initialActivePosition
-  );
-  const [positionToFocus, setPositionToFocus] = useState<ActivePosition | EditPosition<R> | null>(
-    null
-  );
-  const positionToFocusRef = useRef<ActivePosition | EditPosition<R>>(null);
+  const [activePosition, setActivePosition] = useState<Position>(initialActivePosition);
+  const [positionToFocus, setPositionToFocus] = useState<Position | null>(null);
+  const positionToFocusRef = useRef<Position>(null);
 
   /**
-   * Returns whether the given position represents a valid cell or row position in the grid.
-   * Active bounds: any valid position in the grid
-   * Viewport: any valid position in the grid outside of header rows and summary rows
-   * Only TreeDataGrid allows the active position to be on a row (`idx: -1`)
+   * Returns whether the given position is a valid cell position in the grid.
+   * Active bounds: any cell of the grid, including the header row
+   * Viewport: any cell of the rows
    */
   function validatePosition({ idx, rowIdx }: Position) {
-    // check column position
-    const isColumnPositionAllColumns = isTreeGrid && idx === -1;
-    const isColumnPositionInActiveBounds = idx >= 0 && idx <= maxColIdx;
+    const isColumnInBounds = idx >= 0 && idx <= maxColIdx;
+    const isCellInActiveBounds = isColumnInBounds && rowIdx >= minRowIdx && rowIdx <= maxRowIdx;
+    const isCellInViewport = isColumnInBounds && rowIdx >= 0 && rowIdx < rows.length;
 
-    // check row position
-    const isRowPositionInActiveBounds = rowIdx >= minRowIdx && rowIdx <= maxRowIdx;
-    const isRowPositionInViewport = rowIdx >= 0 && rowIdx < rows.length;
-
-    // row status
-    const isRowInActiveBounds = isColumnPositionAllColumns && isRowPositionInActiveBounds;
-    const isRowInViewport = isColumnPositionAllColumns && isRowPositionInViewport;
-
-    // cell status
-    const isCellInActiveBounds = isColumnPositionInActiveBounds && isRowPositionInActiveBounds;
-    const isCellInViewport = isColumnPositionInActiveBounds && isRowPositionInViewport;
-
-    // position status
-    const isPositionInActiveBounds = isRowInActiveBounds || isCellInActiveBounds;
-    const isPositionInViewport = isRowInViewport || isCellInViewport;
-
-    return {
-      isPositionInActiveBounds,
-      isPositionInViewport,
-      isRowInActiveBounds,
-      isRowInViewport,
-      isCellInActiveBounds,
-      isCellInViewport
-    };
+    return { isCellInActiveBounds, isCellInViewport };
   }
 
-  function resolveActivePosition(position: ActivePosition | EditPosition<R>) {
-    const validatedPosition = validatePosition(position);
+  let resolvedActivePosition = activePosition;
+  let validatedPosition = validatePosition(activePosition);
 
-    if (position !== initialActivePosition) {
-      // Reinitialize the active position and immediately use the new state if it is no longer valid.
-      // This can happen when a column or row is removed.
-      if (!validatedPosition.isPositionInActiveBounds) {
-        setActivePosition(initialActivePosition);
-        setDraggedOverRowIdx(undefined);
-        return resolveActivePosition(initialActivePosition);
-      }
-
-      if (position.mode === 'EDIT') {
-        const closeOnExternalRowChange =
-          columns[position.idx].editorOptions?.closeOnExternalRowChange ?? true;
-
-        // Discard changes if the row is updated from outside,
-        // or if removing rows moved the position to a summary row
-        if (
-          !validatedPosition.isCellInViewport ||
-          (closeOnExternalRowChange && rows[position.rowIdx] !== position.originalRow)
-        ) {
-          const newPosition: ActivePosition = {
-            idx: position.idx,
-            rowIdx: position.rowIdx,
-            mode: 'ACTIVE'
-          };
-          setActivePosition(newPosition);
-          setPositionToFocus(null);
-          return resolveActivePosition(newPosition);
-        }
-      }
-    }
-
-    return {
-      resolvedActivePosition: position,
-      validatedPosition
-    };
+  // Reinitialize the active position and immediately use the new state if it is no longer valid.
+  // This can happen when a column or row is removed.
+  if (activePosition !== initialActivePosition && !validatedPosition.isCellInActiveBounds) {
+    setActivePosition(initialActivePosition);
+    resolvedActivePosition = initialActivePosition;
+    validatedPosition = validatePosition(initialActivePosition);
   }
-
-  const { resolvedActivePosition, validatedPosition } = resolveActivePosition(activePosition);
 
   function queryActiveColumn(): CalculatedColumn<R, SR> | undefined {
     if (!validatedPosition.isCellInActiveBounds) return;
@@ -140,7 +66,7 @@ export function useActivePosition<R, SR>({
   }
 
   function getActiveRow() {
-    if (!validatedPosition.isPositionInViewport) {
+    if (!validatedPosition.isCellInViewport) {
       throw new Error('No row for active position');
     }
     return rows[resolvedActivePosition.rowIdx];
@@ -155,12 +81,7 @@ export function useActivePosition<R, SR>({
     // 2. avoid re-rendering by not re-setting the state
     if (positionToFocus !== null && positionToFocus !== positionToFocusRef.current) {
       positionToFocusRef.current = positionToFocus;
-
-      if (positionToFocus.idx === -1) {
-        focusRow(gridRef.current!);
-      } else {
-        focusCell(gridRef.current!);
-      }
+      focusCell(gridRef.current!);
     }
   }, [positionToFocus, gridRef]);
 
@@ -168,9 +89,7 @@ export function useActivePosition<R, SR>({
     activePosition: resolvedActivePosition,
     setActivePosition,
     setPositionToFocus,
-    activePositionIsInActiveBounds: validatedPosition.isPositionInActiveBounds,
-    activePositionIsInViewport: validatedPosition.isPositionInViewport,
-    activePositionIsRow: validatedPosition.isRowInActiveBounds,
+    activePositionIsInActiveBounds: validatedPosition.isCellInActiveBounds,
     activePositionIsCellInViewport: validatedPosition.isCellInViewport,
     validatePosition,
     queryActiveColumn,

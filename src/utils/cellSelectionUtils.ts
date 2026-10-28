@@ -8,14 +8,11 @@ import type {
 
 export const ROW_HEADER_COLUMN_KEY = 'rdg-row-header-column';
 
-// same value as `SELECT_COLUMN_KEY` in `Columns.tsx`, which can't be imported here without an import cycle
-const SELECT_COLUMN_KEY = 'rdg-select-column';
-
 export const emptyCellSelection: CellSelection = [];
 
-/** The row header and select columns can be part of a range, but their cells are never selected data */
-export function isCellSelectionUtilityColumn(key: string) {
-  return key === ROW_HEADER_COLUMN_KEY || key === SELECT_COLUMN_KEY;
+/** The row header column can be part of a range, but its cells are never selected data */
+export function isRowHeaderColumn(key: string) {
+  return key === ROW_HEADER_COLUMN_KEY;
 }
 
 export function getCellRange(anchor: Position, lead: Position): CellRange {

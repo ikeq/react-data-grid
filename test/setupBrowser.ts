@@ -24,14 +24,11 @@ configure({
 declare module 'vitest/browser' {
   interface LocatorSelectors {
     getGrid: () => Locator;
-    getTreeGrid: () => Locator;
     getHeaderRow: (opts?: LocatorByRoleOptions) => Locator;
     getHeaderCell: (opts?: LocatorByRoleOptions) => Locator;
     getRow: (opts?: LocatorByRoleOptions) => Locator;
     getCell: (opts?: LocatorByRoleOptions) => Locator;
-    getSelectAllCheckbox: () => Locator;
     getActiveCell: () => Locator;
-    getDragHandle: () => Locator;
     getBySelector: (selector: string) => Locator;
   }
 }
@@ -39,10 +36,6 @@ declare module 'vitest/browser' {
 locators.extend({
   getGrid() {
     return this.getByRole('grid');
-  },
-
-  getTreeGrid() {
-    return this.getByRole('treegrid');
   },
 
   getHeaderRow(opts?: LocatorByRoleOptions) {
@@ -61,16 +54,8 @@ locators.extend({
     return this.getByRole('gridcell', opts);
   },
 
-  getSelectAllCheckbox() {
-    return this.getByRole('checkbox', { name: 'Select All' });
-  },
-
   getActiveCell() {
     return this.getCell({ selected: true }).or(this.getHeaderCell({ selected: true }));
-  },
-
-  getDragHandle() {
-    return '.rdg-cell-drag-handle';
   },
 
   getBySelector(selector: string) {

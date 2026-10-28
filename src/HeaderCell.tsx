@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import { useRef } from 'react';
 import { css } from 'ecij';
 
 import { useRovingTabIndex } from './hooks';
@@ -7,9 +6,6 @@ import {
   clampColumnWidth,
   getCellClassname,
   getCellStyle,
-  getHeaderCellRowSpan,
-  getHeaderCellStyle,
-  getLeftRightKey,
   isCtrlKeyHeldDown,
   isElement,
   ROW_HEADER_COLUMN_KEY,
@@ -40,33 +36,6 @@ const resizeHandle = css`
 
 const resizeHandleClassname = `rdg-resize-handle ${resizeHandle}`;
 
-const cellDraggableClassname = 'rdg-cell-draggable';
-
-const cellDraggingOrOver = css`
-  @layer rdg.HeaderCell {
-    background-color: var(--rdg-header-draggable-background-color);
-
-    /* the background color is replaced in forced colors mode */
-    @media (forced-colors: active) {
-      outline: 2px dashed Highlight;
-      outline-offset: -2px;
-    }
-  }
-`;
-
-const cellDraggingClassname = `rdg-cell-dragging ${cellDraggingOrOver}`;
-
-const cellOverClassname = `rdg-cell-drag-over ${cellDraggingOrOver}`;
-
-const dragImageClassname = css`
-  @layer rdg.HeaderCell {
-    border-radius: 4px;
-    width: fit-content;
-    outline: 2px solid hsl(207, 100%, 50%);
-    outline-offset: -2px;
-  }
-`;
-
 type SharedHeaderRowProps<R, SR> = Pick<
   HeaderRowProps<R, SR, React.Key>,
   | 'sortColumns'
@@ -75,48 +44,32 @@ type SharedHeaderRowProps<R, SR> = Pick<
   | 'onColumnResize'
   | 'onColumnResizeEnd'
   | 'shouldFocusGrid'
-  | 'direction'
-  | 'onColumnsReorder'
-  | 'enableCellSelection'
   | 'onHeaderCellMouseDown'
   | 'onHeaderCellContextMenu'
 >;
 
 export interface HeaderCellProps<R, SR> extends SharedHeaderRowProps<R, SR> {
   column: CalculatedColumn<R, SR>;
-  colSpan: number;
-  rowIdx: number;
   isCellActive: boolean;
   isColumnSelected: boolean;
-  draggedColumnKey: string | undefined;
-  setDraggedColumnKey: (draggedColumnKey: string | undefined) => void;
 }
 
 export default function HeaderCell<R, SR>({
   column,
-  colSpan,
-  rowIdx,
   isCellActive,
   isColumnSelected,
-  enableCellSelection,
   onHeaderCellMouseDown,
   onHeaderCellContextMenu,
   onColumnResize,
   onColumnResizeEnd,
-  onColumnsReorder,
   sortColumns,
   onSortColumnsChange,
   setPosition,
-  shouldFocusGrid,
-  direction,
-  draggedColumnKey,
-  setDraggedColumnKey
+  shouldFocusGrid
 }: HeaderCellProps<R, SR>) {
-  const [isOver, setIsOver] = useState(false);
   const resizingRef = useRef(false);
-  const dragImageRef = useRef<HTMLDivElement>(null);
-  const isDragging = draggedColumnKey === column.key;
-  const rowSpan = getHeaderCellRowSpan(column, rowIdx);
+  // the header row's index, header cells are always in the header row
+  const rowIdx = -1;
   // set the tabIndex to 0 when there is no active cell so the grid can receive focus
   const { tabIndex, childTabIndex, onFocus } = useRovingTabIndex(shouldFocusGrid || isCellActive);
   const sortIndex = sortColumns?.findIndex((sort) => sort.columnKey === column.key);
@@ -126,16 +79,13 @@ export default function HeaderCell<R, SR>({
   const priority = sortColumn !== undefined && sortColumns!.length > 1 ? sortIndex! + 1 : undefined;
   const ariaSort =
     sortDirection && !priority ? (sortDirection === 'ASC' ? 'ascending' : 'descending') : undefined;
-  const { resizable, draggable } = column;
+  const { resizable } = column;
 
   const className = getCellClassname(
     column,
     column.key === ROW_HEADER_COLUMN_KEY && rowHeaderCornerCellClassnames,
     column.headerCellClass,
     resizable && cellResizableClassname,
-    draggable && cellDraggableClassname,
-    isDragging && cellDraggingClassname,
-    isOver && cellOverClassname,
     isColumnSelected && headerCellRangeSelectedClassname
   );
 
@@ -191,15 +141,13 @@ export default function HeaderCell<R, SR>({
   function onMouseDown(event: React.MouseEvent<HTMLDivElement>) {
     setPosition({ idx: column.idx, rowIdx });
     // controls rendered in the header cell, like a sort button, don't select the column
-    if (enableCellSelection && !isInteractiveTarget(event)) {
+    if (!isInteractiveTarget(event)) {
       onHeaderCellMouseDown(column, event);
     }
   }
 
   function onContextMenu(event: React.MouseEvent<HTMLDivElement>) {
-    if (enableCellSelection) {
-      onHeaderCellContextMenu(column, event);
-    }
+    onHeaderCellContextMenu(column, event);
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLSpanElement>) {
@@ -210,8 +158,7 @@ export default function HeaderCell<R, SR>({
       event.stopPropagation();
       resizingRef.current = true;
       const { width } = event.currentTarget.getBoundingClientRect();
-      const { leftKey } = getLeftRightKey(direction);
-      const offset = key === leftKey ? -10 : 10;
+      const offset = key === 'ArrowLeft' ? -10 : 10;
       const newWidth = clampColumnWidth(width + offset, column);
       if (newWidth !== width) {
         onColumnResize(column, newWidth);
@@ -227,60 +174,10 @@ export default function HeaderCell<R, SR>({
     }
   }
 
-  function onDragStart(event: React.DragEvent<HTMLDivElement>) {
-    // need flushSync to make sure the drag image is rendered before the drag starts
-    flushSync(() => {
-      setDraggedColumnKey(column.key);
-    });
-    event.dataTransfer.setDragImage(dragImageRef.current!, 0, 0);
-    event.dataTransfer.dropEffect = 'move';
-  }
-
-  function onDragEnd() {
-    setDraggedColumnKey(undefined);
-  }
-
-  function onDrop(event: React.DragEvent<HTMLDivElement>) {
-    setIsOver(false);
-    // prevent the browser from redirecting in some cases
-    event.preventDefault();
-    onColumnsReorder?.(draggedColumnKey!, column.key);
-  }
-
-  function onDragEnter(event: React.DragEvent<HTMLDivElement>) {
-    if (isEventPertinent(event)) {
-      setIsOver(true);
-    }
-  }
-
-  function onDragLeave(event: React.DragEvent<HTMLDivElement>) {
-    if (isEventPertinent(event)) {
-      setIsOver(false);
-    }
-  }
-
-  let dragTargetProps: React.ComponentProps<'div'> | undefined;
-  let dropTargetProps: React.ComponentProps<'div'> | undefined;
-  if (draggable) {
-    dragTargetProps = {
-      draggable: true,
-      onDragStart,
-      onDragEnd
-    };
-
-    if (draggedColumnKey !== undefined && draggedColumnKey !== column.key) {
-      dropTargetProps = {
-        onDragOver,
-        onDragEnter,
-        onDragLeave,
-        onDrop
-      };
-    }
-  }
-
   const style: React.CSSProperties = {
-    ...getHeaderCellStyle(column, rowIdx, rowSpan),
-    ...getCellStyle(column, colSpan)
+    ...getCellStyle(column),
+    insetBlockStart: 0,
+    gridRowStart: 1
   };
 
   const content = column.renderHeaderCell({
@@ -292,84 +189,65 @@ export default function HeaderCell<R, SR>({
   });
 
   return (
-    <>
-      {isDragging && (
-        <div
-          ref={dragImageRef}
-          style={style}
-          className={getCellClassname(column, column.headerCellClass, dragImageClassname)}
-        >
-          {content}
-        </div>
-      )}
-      <div
-        role="columnheader"
-        aria-colindex={column.idx + 1}
-        aria-colspan={colSpan > 1 ? colSpan : undefined}
-        aria-rowspan={rowSpan}
-        aria-selected={isCellActive}
-        aria-sort={ariaSort}
-        tabIndex={tabIndex}
-        className={className}
-        style={style}
-        onMouseDown={onMouseDown}
-        onFocus={handleFocus}
-        onContextMenu={onContextMenu}
-        onKeyDown={onKeyDown}
-        onKeyUp={endKeyboardResize}
-        onBlur={endKeyboardResize}
-        {...dragTargetProps}
-        {...dropTargetProps}
-      >
-        {content}
+    <div
+      role="columnheader"
+      aria-colindex={column.idx + 1}
+      aria-selected={isCellActive}
+      aria-sort={ariaSort}
+      tabIndex={tabIndex}
+      className={className}
+      style={style}
+      onMouseDown={onMouseDown}
+      onFocus={handleFocus}
+      onContextMenu={onContextMenu}
+      onKeyDown={onKeyDown}
+      onKeyUp={endKeyboardResize}
+      onBlur={endKeyboardResize}
+    >
+      {content}
 
-        {resizable && (
-          <ResizeHandle
-            direction={direction}
-            column={column}
-            onColumnResize={onColumnResize}
-            onColumnResizeEnd={onColumnResizeEnd}
-          />
-        )}
-      </div>
-    </>
+      {resizable && (
+        <ResizeHandle
+          column={column}
+          onColumnResize={onColumnResize}
+          onColumnResizeEnd={onColumnResizeEnd}
+        />
+      )}
+    </div>
   );
 }
 
 type ResizeHandleProps<R, SR> = Pick<
   HeaderCellProps<R, SR>,
-  'direction' | 'column' | 'onColumnResize' | 'onColumnResizeEnd'
+  'column' | 'onColumnResize' | 'onColumnResizeEnd'
 >;
 
 function ResizeHandle<R, SR>({
-  direction,
   column,
   onColumnResize,
   onColumnResizeEnd
 }: ResizeHandleProps<R, SR>) {
   const resizingOffsetRef = useRef<number>(undefined);
-  const isRtl = direction === 'rtl';
 
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.pointerType === 'mouse' && event.button !== 0) {
       return;
     }
 
-    // Fix column resizing on a draggable column in FF
     event.preventDefault();
 
     const { currentTarget, pointerId } = event;
     currentTarget.setPointerCapture(pointerId);
     const headerCell = currentTarget.parentElement!;
-    const { right, left } = headerCell.getBoundingClientRect();
-    resizingOffsetRef.current = isRtl ? event.clientX - left : right - event.clientX;
+    const { right } = headerCell.getBoundingClientRect();
+    resizingOffsetRef.current = right - event.clientX;
   }
 
   function onPointerMove(event: React.PointerEvent<HTMLDivElement>) {
     const offset = resizingOffsetRef.current;
     if (offset === undefined) return;
-    const { width, right, left } = event.currentTarget.parentElement!.getBoundingClientRect();
-    let newWidth = isRtl ? right + offset - event.clientX : event.clientX + offset - left;
+    const { width, left } = event.currentTarget.parentElement!.getBoundingClientRect();
+    let newWidth = event.clientX + offset - left;
     newWidth = clampColumnWidth(newWidth, column);
     if (width > 0 && newWidth !== width) {
       onColumnResize(column, newWidth);
@@ -398,21 +276,6 @@ function ResizeHandle<R, SR>({
       onDoubleClick={onDoubleClick}
     />
   );
-}
-
-function onDragOver(event: React.DragEvent<HTMLDivElement>) {
-  // prevent default to allow drop
-  event.preventDefault();
-  event.dataTransfer.dropEffect = 'move';
-}
-
-// only accept pertinent drag events:
-// - ignore drag events going from the container to an element inside the container
-// - ignore drag events going from an element inside the container to the container
-function isEventPertinent(event: React.DragEvent) {
-  const relatedTarget = event.relatedTarget as HTMLElement | null;
-
-  return !event.currentTarget.contains(relatedTarget);
 }
 
 // controls in the header cell handle their own clicks

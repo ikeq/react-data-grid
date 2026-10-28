@@ -1,90 +1,23 @@
 import { useCallback, useMemo } from 'react';
 
-import { getViewportColumns, mapColumnsWithColSpan, min } from '../utils';
-import type { CalculatedColumn, ColSpanArgs, MapViewportColumns, Maybe } from '../types';
+import { getViewportColumns, mapColumns, min } from '../utils';
+import type { CalculatedColumn, MapViewportColumns } from '../types';
 
 interface ViewportColumnsArgs<R, SR> {
   columns: readonly CalculatedColumn<R, SR>[];
-  colSpanColumns: readonly CalculatedColumn<R, SR>[];
-  rows: readonly R[];
-  topSummaryRows: Maybe<readonly SR[]>;
-  bottomSummaryRows: Maybe<readonly SR[]>;
   colOverscanStartIdx: number;
   colOverscanEndIdx: number;
   lastStartFrozenColumnIndex: number;
   firstEndFrozenColumnIndex: number;
-  rowOverscanStartIdx: number;
-  rowOverscanEndIdx: number;
 }
 
 export function useViewportColumns<R, SR>({
   columns,
-  colSpanColumns,
-  rows,
-  topSummaryRows,
-  bottomSummaryRows,
   colOverscanStartIdx,
   colOverscanEndIdx,
   lastStartFrozenColumnIndex,
-  firstEndFrozenColumnIndex,
-  rowOverscanStartIdx,
-  rowOverscanEndIdx
+  firstEndFrozenColumnIndex
 }: ViewportColumnsArgs<R, SR>) {
-  // find the column that spans over a column within the visible columns range and adjust colOverscanStartIdx
-  const startIdx = useMemo(() => {
-    if (colOverscanStartIdx === 0 || colSpanColumns.length === 0) return colOverscanStartIdx;
-
-    // only the unfrozen columns before the range can span over a column within it
-    const candidateColumns = colSpanColumns.filter(
-      (column) => !column.frozen && column.idx < colOverscanStartIdx
-    );
-    if (candidateColumns.length === 0) return colOverscanStartIdx;
-
-    // check header row
-    const colSpanArgs: ColSpanArgs<R, SR>[] = [{ type: 'HEADER' }];
-
-    // check top summary rows
-    if (topSummaryRows != null) {
-      for (const row of topSummaryRows) {
-        colSpanArgs.push({ type: 'SUMMARY', row });
-      }
-    }
-
-    // check viewport rows
-    for (let rowIdx = rowOverscanStartIdx; rowIdx <= rowOverscanEndIdx; rowIdx++) {
-      colSpanArgs.push({ type: 'ROW', row: rows[rowIdx] });
-    }
-
-    // check bottom summary rows
-    if (bottomSummaryRows != null) {
-      for (const row of bottomSummaryRows) {
-        colSpanArgs.push({ type: 'SUMMARY', row });
-      }
-    }
-
-    for (const column of candidateColumns) {
-      const colIdx = column.idx;
-
-      for (const args of colSpanArgs) {
-        const colSpan = column.getColSpan(args);
-
-        if (colIdx + colSpan > colOverscanStartIdx) {
-          return colIdx;
-        }
-      }
-    }
-
-    return colOverscanStartIdx;
-  }, [
-    rowOverscanStartIdx,
-    rowOverscanEndIdx,
-    rows,
-    topSummaryRows,
-    bottomSummaryRows,
-    colOverscanStartIdx,
-    colSpanColumns
-  ]);
-
   // Effective inclusive upper bound for overscan in the unfrozen band.
   // When end-frozen columns exist, the unfrozen band ends just before them.
   const effectiveOverscanEndIdx =
@@ -98,7 +31,7 @@ export function useViewportColumns<R, SR>({
       columns,
       lastStartFrozenColumnIndex,
       firstEndFrozenColumnIndex,
-      startIdx,
+      colOverscanStartIdx,
       effectiveOverscanEndIdx,
       -1
     );
@@ -106,12 +39,12 @@ export function useViewportColumns<R, SR>({
     columns,
     lastStartFrozenColumnIndex,
     firstEndFrozenColumnIndex,
-    startIdx,
+    colOverscanStartIdx,
     effectiveOverscanEndIdx
   ]);
 
   const mapViewportColumns = useCallback<MapViewportColumns<R, SR>>(
-    (activeColumnIdx = -1, colSpanArgs, callback) => {
+    (activeColumnIdx = -1, callback) => {
       const rowColumns =
         activeColumnIdx === -1
           ? viewportColumns
@@ -119,33 +52,27 @@ export function useViewportColumns<R, SR>({
               columns,
               lastStartFrozenColumnIndex,
               firstEndFrozenColumnIndex,
-              startIdx,
+              colOverscanStartIdx,
               effectiveOverscanEndIdx,
               activeColumnIdx
             );
 
-      return mapColumnsWithColSpan(rowColumns, activeColumnIdx, colSpanArgs, callback);
+      return mapColumns(rowColumns, activeColumnIdx, callback);
     },
     [
       viewportColumns,
       columns,
       lastStartFrozenColumnIndex,
       firstEndFrozenColumnIndex,
-      startIdx,
+      colOverscanStartIdx,
       effectiveOverscanEndIdx
     ]
   );
 
   const mapViewportColumnsOutsideOfViewport = useCallback<MapViewportColumns<R, SR>>(
-    (activeColumnIdx = -1, colSpanArgs, callback) => {
+    (activeColumnIdx = -1, callback) => {
       if (activeColumnIdx < 0 || activeColumnIdx >= columns.length) return [];
-
-      return mapColumnsWithColSpan(
-        [columns[activeColumnIdx]],
-        activeColumnIdx,
-        colSpanArgs,
-        callback
-      );
+      return mapColumns([columns[activeColumnIdx]], activeColumnIdx, callback);
     },
     [columns]
   );

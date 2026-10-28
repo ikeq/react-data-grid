@@ -14,13 +14,10 @@ function setupGrid(
   columnCount: number,
   rowCount: number,
   frozenColumnCount = 0,
-  summaryRowCount = 0,
   endFrozenColumnCount = 0
 ) {
-  const columns: Column<unknown, null>[] = [];
+  const columns: Column<unknown>[] = [];
   const rows = Array.from({ length: rowCount });
-  const topSummaryRows = Array.from({ length: summaryRowCount }, () => null);
-  const bottomSummaryRows = Array.from({ length: summaryRowCount }, () => null);
 
   for (let i = 0; i < columnCount; i++) {
     const key = String(i);
@@ -35,8 +32,6 @@ function setupGrid(
   return setup({
     columns,
     rows,
-    topSummaryRows,
-    bottomSummaryRows,
     rowHeight,
     enableVirtualization
   });
@@ -77,10 +72,6 @@ async function assertHeaderCellIndexes(indexes: number[]) {
 
 async function assertRows(count: number, startIdx: number, endIdx: number) {
   await assertElements(rows, 'aria-rowindex', count, startIdx + 2, endIdx + 2);
-}
-
-async function assertRowIndexes(indexes: number[]) {
-  await assertIndexes(rows, indexes, 'aria-rowindex', 2);
 }
 
 async function assertCells(rowIdx: number, count: number, startIdx: number, endIdx: number) {
@@ -191,7 +182,7 @@ test('virtualization is enabled with all columns frozen', async () => {
 });
 
 test('virtualization is enabled with 2 end-frozen columns', async () => {
-  await setupGrid(true, 30, 30, 0, 0, 2);
+  await setupGrid(true, 30, 30, 0, 2);
 
   // end-frozen columns (28, 29) are always rendered; the unfrozen viewport
   // is narrower by their total width, so fewer unfrozen columns are visible
@@ -245,21 +236,6 @@ test('virtualization is enabled with start + end frozen columns', async () => {
   await expect.element(page.getHeaderCell({ name: '29' })).toBeInTheDocument();
 });
 
-test('virtualization is enabled with 2 summary rows', async () => {
-  await setupGrid(true, 1, 100, 0, 2);
-
-  await assertRowIndexes([
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-    26, 27, 28, 29, 30, 31, 102, 103
-  ]);
-
-  scrollGrid({ top: 1000 });
-  await assertRowIndexes([
-    0, 1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-    48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 102, 103
-  ]);
-});
-
 test('zero columns', async () => {
   await setupGrid(true, 0, 100);
 
@@ -301,7 +277,7 @@ test('virtualization is disabled with some frozen columns', async () => {
 });
 
 test('virtualization is disabled with start and end frozen columns', async () => {
-  await setupGrid(false, 40, 100, 3, 0, 2);
+  await setupGrid(false, 40, 100, 3, 2);
 
   await assertHeaderCells(40, 0, 39);
   await assertRows(100, 0, 99);

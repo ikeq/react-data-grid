@@ -1,6 +1,6 @@
 import { commands, page, server, userEvent } from 'vite-plus/test/browser';
 
-import { DataGrid, renderTextEditor, SelectColumn, type Column } from '../../src';
+import { DataGrid, RowHeaderColumn, type Column } from '../../src';
 import { safeTab } from '../browser/utils';
 
 const grid = page.getGrid();
@@ -11,11 +11,10 @@ interface Row {
 }
 
 const columns: readonly Column<Row>[] = [
-  SelectColumn,
+  RowHeaderColumn,
   {
     key: 'name',
-    name: 'Name',
-    renderEditCell: renderTextEditor
+    name: 'Name'
   }
 ];
 
@@ -24,8 +23,6 @@ const rows: readonly Row[] = [
   { id: 2, name: 'Row 2' },
   { id: 3, name: 'Row 3' }
 ];
-
-const selectedRows: ReadonlySet<number> = new Set([1, 2]);
 
 function rowKeyGetter(row: Row) {
   return row.id;
@@ -55,41 +52,25 @@ describe.each(palettes)('$colorScheme palette', ({ colorScheme, prefix }) => {
         rowKeyGetter={rowKeyGetter}
         columns={columns}
         rows={rows}
-        selectedRows={selectedRows}
-        onSelectedRowsChange={() => {}}
-        onRowsChange={() => {}}
-        onFill={({ targetRow }) => targetRow}
         style={{ blockSize: 160, inlineSize: 400 }}
       />
     );
 
-    // focus the "Select All" header cell with the keyboard, so `:focus-visible` matches
+    // focus the top-left header cell with the keyboard, so `:focus-visible` matches
     await safeTab();
   });
 
-  it('active cell on a selected row', async () => {
+  it('active header cell', async () => {
+    await expect.element(grid).toMatchScreenshot(`${prefix}-active-header-cell`);
+  });
+
+  it('selected cell', async () => {
     await userEvent.keyboard('{ArrowDown}{ArrowRight}');
-    await expect.element(grid).toMatchScreenshot(`${prefix}-active-cell-selected-row`);
+    await expect.element(grid).toMatchScreenshot(`${prefix}-selected-cell`);
   });
 
-  it('active cell on an unselected row', async () => {
-    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{ArrowRight}');
-    await expect.element(grid).toMatchScreenshot(`${prefix}-active-cell-unselected-row`);
-  });
-
-  it('editor on a selected row', async () => {
-    await userEvent.keyboard('{ArrowDown}{ArrowRight}{Enter}');
-    await expect.element(page.getByRole('textbox')).toHaveFocus();
-    await expect.element(grid).toMatchScreenshot(`${prefix}-editor-selected-row`);
-  });
-
-  it('focused checkbox on a selected row', async () => {
-    await userEvent.keyboard('{ArrowDown}');
-    await expect.element(grid).toMatchScreenshot(`${prefix}-focused-checkbox-selected-row`);
-  });
-
-  it('focused checkbox on an unselected row', async () => {
-    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
-    await expect.element(grid).toMatchScreenshot(`${prefix}-focused-checkbox-unselected-row`);
+  it('selected range', async () => {
+    await userEvent.keyboard('{ArrowDown}{ArrowRight}{Shift>}{ArrowDown}{/Shift}');
+    await expect.element(grid).toMatchScreenshot(`${prefix}-selected-range`);
   });
 });

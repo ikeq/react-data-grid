@@ -12,10 +12,6 @@ export function scrollIntoView(element: Element | null, behavior: ScrollBehavior
   element?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior });
 }
 
-function getRowToScroll(gridEl: HTMLDivElement) {
-  return gridEl.querySelector<HTMLDivElement>('& > [role="row"][tabindex="0"]');
-}
-
 export function getCellToScroll(gridEl: HTMLDivElement) {
   return gridEl.querySelector<HTMLDivElement>('& > [role="row"] > [tabindex="0"]');
 }
@@ -28,10 +24,6 @@ function focusElement(element: HTMLDivElement | null, shouldScroll: boolean) {
   }
 
   element.focus({ preventScroll: true });
-}
-
-export function focusRow(gridEl: HTMLDivElement) {
-  focusElement(getRowToScroll(gridEl), true);
 }
 
 export function focusCell(gridEl: HTMLDivElement, shouldScroll = true) {

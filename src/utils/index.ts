@@ -1,4 +1,4 @@
-import type { CalculatedColumn, CalculatedColumnOrColumnGroup, Maybe } from '../types';
+import type { CalculatedColumn } from '../types';
 
 export * from './activePositionUtils';
 export * from './cellSelectionUtils';
@@ -10,14 +10,6 @@ export * from './styleUtils';
 export * from './viewportUtils';
 
 export const { min, max, floor, abs } = Math;
-
-export function assertIsValidKeyGetter<R, K extends React.Key>(
-  keyGetter: Maybe<(row: NoInfer<R>) => K>
-): asserts keyGetter is (row: R) => K {
-  if (typeof keyGetter !== 'function') {
-    throw new TypeError('Please specify the rowKeyGetter prop to use selection');
-  }
-}
 
 export function clampColumnWidth<R, SR>(
   width: number,
@@ -31,11 +23,4 @@ export function clampColumnWidth<R, SR>(
   }
 
   return width;
-}
-
-export function getHeaderCellRowSpan<R, SR>(
-  column: CalculatedColumnOrColumnGroup<R, SR>,
-  rowIdx: number
-) {
-  return column.parent === undefined ? rowIdx : column.level - column.parent.level;
 }

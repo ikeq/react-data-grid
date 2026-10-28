@@ -1,105 +1,69 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 
-import { RowSelectionContext, type RowSelectionContextValue } from './hooks';
 import { classnames, getCellSelectionEdges, ROW_HEADER_COLUMN_KEY } from './utils';
 import type { RenderRowProps } from './types';
-import { useRenderers } from './DataGridRenderersContext';
-import { rowClassname, rowActiveClassname } from './style/row';
+import Cell from './Cell';
+import { rowClassname } from './style/row';
 
 function Row<R, SR>({
   className,
   rowIdx,
   gridRowStart,
   activeCellIdx,
-  isRowSelectionDisabled,
-  isRowSelected,
-  draggedOverCellIdx,
   selectedRowRanges,
   row,
   mapViewportColumns,
-  activeCellEditor,
-  isTreeGrid,
   onCellMouseDown,
   onCellClick,
   onCellDoubleClick,
   onCellContextMenu,
   rowClass,
-  onRowChange,
   setActivePosition,
   style,
   ...props
 }: RenderRowProps<R, SR>) {
-  const renderCell = useRenderers<R, SR>()!.renderCell!;
-
-  const isPositionOnRow = activeCellIdx === -1;
-
   className = classnames(
     rowClassname,
     `rdg-row-${rowIdx % 2 === 0 ? 'even' : 'odd'}`,
-    isPositionOnRow && rowActiveClassname,
     rowClass?.(row, rowIdx),
     className
   );
 
-  const cells = mapViewportColumns(
-    activeCellIdx,
-    { type: 'ROW', row },
-    (column, isCellActive, colSpan) => {
-      if (isCellActive && activeCellEditor) {
-        return activeCellEditor;
+  const cells = mapViewportColumns(activeCellIdx, (column, isCellActive) => (
+    <Cell
+      key={column.key}
+      column={column}
+      row={row}
+      rowIdx={rowIdx}
+      isCellActive={isCellActive}
+      isCellSelected={
+        selectedRowRanges !== undefined &&
+        // the row header cell is highlighted when any cell of the row is selected
+        (column.key === ROW_HEADER_COLUMN_KEY ||
+          selectedRowRanges.some(([start, end]) => column.idx >= start && column.idx <= end))
       }
-
-      const endIdx = column.idx + colSpan - 1;
-      return renderCell(column.key, {
-        column,
-        colSpan,
-        row,
-        rowIdx,
-        isDraggedOver: draggedOverCellIdx === column.idx,
-        isCellActive,
-        isCellSelected:
-          selectedRowRanges !== undefined &&
-          // the row header cell is highlighted when any cell of the row is selected
-          (column.key === ROW_HEADER_COLUMN_KEY ||
-            selectedRowRanges.some(([start, end]) => column.idx <= end && endIdx >= start)),
-        cellSelectionEdges: getCellSelectionEdges(selectedRowRanges, column.idx, endIdx),
-        onCellMouseDown,
-        onCellClick,
-        onCellDoubleClick,
-        onCellContextMenu,
-        onRowChange,
-        setActivePosition
-      });
-    }
-  );
-
-  const selectionValue = useMemo(
-    (): RowSelectionContextValue => ({ isRowSelected, isRowSelectionDisabled }),
-    [isRowSelectionDisabled, isRowSelected]
-  );
+      cellSelectionEdges={getCellSelectionEdges(selectedRowRanges, column.idx, column.idx)}
+      onCellMouseDown={onCellMouseDown}
+      onCellClick={onCellClick}
+      onCellDoubleClick={onCellDoubleClick}
+      onCellContextMenu={onCellContextMenu}
+      setActivePosition={setActivePosition}
+    />
+  ));
 
   return (
-    <RowSelectionContext value={selectionValue}>
-      <div
-        role="row"
-        tabIndex={isTreeGrid ? (isPositionOnRow ? 0 : -1) : undefined}
-        className={className}
-        style={{
-          gridRowStart,
-          ...style
-        }}
-        {...props}
-      >
-        {cells}
-      </div>
-    </RowSelectionContext>
+    <div
+      role="row"
+      className={className}
+      style={{
+        gridRowStart,
+        ...style
+      }}
+      {...props}
+    >
+      {cells}
+    </div>
   );
 }
 
-const MemoRow = memo(Row) as <R, SR>(props: RenderRowProps<R, SR>) => React.JSX.Element;
-
-export { MemoRow as Row };
-
-export function defaultRenderRow<R, SR>(key: React.Key, props: RenderRowProps<R, SR>) {
-  return <MemoRow key={key} {...props} />;
-}
+export default memo(Row) as <R, SR>(props: RenderRowProps<R, SR>) => React.JSX.Element;

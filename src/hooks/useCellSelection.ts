@@ -6,10 +6,10 @@ import {
   getCellRange,
   getSelectedColumnIntervals,
   getSelectedRowRanges,
-  isCellSelectionUtilityColumn,
   isColumnInCellSelection,
   isElement,
   isPositionInCellSelection,
+  isRowHeaderColumn,
   isRowInCellSelection,
   isSameCellRange,
   ROW_HEADER_COLUMN_KEY,
@@ -41,7 +41,6 @@ interface DragState {
 }
 
 export interface UseCellSelectionArgs<R, SR> {
-  enabled: boolean;
   gridRef: React.RefObject<HTMLDivElement | null>;
   rows: readonly R[];
   columns: readonly CalculatedColumn<R, SR>[];
@@ -51,9 +50,6 @@ export interface UseCellSelectionArgs<R, SR> {
     (args: CellSelectionContextMenuArgs<R, SR>, event: React.MouseEvent<HTMLDivElement>) => void
   >;
   headerRowsHeight: number;
-  headerRowHeight: number;
-  topSummaryRowsHeight: number;
-  bottomSummaryRowsHeight: number;
   findRowIdx: (offset: number) => number;
 }
 
@@ -69,7 +65,6 @@ function getAutoScrollDelta(distance: number) {
 }
 
 export function useCellSelection<R, SR>({
-  enabled,
   gridRef,
   rows,
   columns,
@@ -77,9 +72,6 @@ export function useCellSelection<R, SR>({
   onSelectionChange,
   onContextMenu,
   headerRowsHeight,
-  headerRowHeight,
-  topSummaryRowsHeight,
-  bottomSummaryRowsHeight,
   findRowIdx
 }: UseCellSelectionArgs<R, SR>) {
   const [internalSelection, setInternalSelection] = useState(emptyCellSelection);
@@ -95,9 +87,11 @@ export function useCellSelection<R, SR>({
   const isControlled = rawSelection != null;
   const maxIdx = columns.length - 1;
   const maxRowIdx = rows.length - 1;
-  const selection = enabled
-    ? clampCellSelection(rawSelection ?? internalSelection, rows.length, columns.length)
-    : emptyCellSelection;
+  const selection = clampCellSelection(
+    rawSelection ?? internalSelection,
+    rows.length,
+    columns.length
+  );
   const isHighlighted = selection.length > 0;
 
   const handlePointerMoveLatest = useLatestFunc(handlePointerMove);
@@ -157,7 +151,7 @@ export function useCellSelection<R, SR>({
    * selection
    */
   function selectAll() {
-    if (!enabled || rows.length === 0 || columns.length === 0) return;
+    if (rows.length === 0 || columns.length === 0) return;
     anchorRef.current = { idx: 0, rowIdx: 0 };
     leadRef.current = { idx: maxIdx, rowIdx: maxRowIdx };
     setSelection([getAllRange()]);
@@ -165,7 +159,6 @@ export function useCellSelection<R, SR>({
 
   // called when the active cell moves without extending the selection
   function collapseSelection(position: Position) {
-    if (!enabled) return;
     const isInRows =
       position.rowIdx >= 0 &&
       position.rowIdx <= maxRowIdx &&
@@ -187,10 +180,9 @@ export function useCellSelection<R, SR>({
     key: string,
     ctrlKey: boolean,
     activePosition: Position,
-    getPageRowIdx: (rowIdx: number, isPageDown: boolean) => number,
-    isRtl: boolean
+    getPageRowIdx: (rowIdx: number, isPageDown: boolean) => number
   ): Position | undefined {
-    if (!enabled || rows.length === 0) return;
+    if (rows.length === 0) return;
     const anchor =
       anchorRef.current ??
       (activePosition.rowIdx >= 0 && activePosition.rowIdx <= maxRowIdx ? activePosition : null);
@@ -198,7 +190,6 @@ export function useCellSelection<R, SR>({
 
     const lead = leadRef.current ?? anchor;
     let { idx, rowIdx } = lead;
-    const leftDelta = isRtl ? 1 : -1;
 
     switch (key) {
       case 'ArrowUp':
@@ -208,10 +199,10 @@ export function useCellSelection<R, SR>({
         rowIdx = ctrlKey ? maxRowIdx : rowIdx + 1;
         break;
       case 'ArrowLeft':
-        idx = ctrlKey ? (isRtl ? maxIdx : 0) : idx + leftDelta;
+        idx = ctrlKey ? 0 : idx - 1;
         break;
       case 'ArrowRight':
-        idx = ctrlKey ? (isRtl ? 0 : maxIdx) : idx - leftDelta;
+        idx = ctrlKey ? maxIdx : idx + 1;
         break;
       case 'Home':
         idx = 0;
@@ -283,8 +274,8 @@ export function useCellSelection<R, SR>({
       top,
       left,
       right: left + grid.clientWidth,
-      bodyTop: top + headerRowsHeight + topSummaryRowsHeight,
-      bodyBottom: top + grid.clientHeight - bottomSummaryRowsHeight
+      bodyTop: top + headerRowsHeight,
+      bodyBottom: top + grid.clientHeight
     };
   }
 
@@ -301,8 +292,8 @@ export function useCellSelection<R, SR>({
 
     if (drag.mode !== 'ROW') {
       const x = clamp(drag.clientX, left + 1, Math.max(left + 1, right - 1));
-      // find the column in the main header row when selecting columns
-      const y = drag.mode === 'COLUMN' ? top + headerRowsHeight - headerRowHeight / 2 : bodyY;
+      // find the column in the header row when selecting columns
+      const y = drag.mode === 'COLUMN' ? top + headerRowsHeight / 2 : bodyY;
       const element = grid.ownerDocument.elementFromPoint(x, y);
       const cell = isElement(element)
         ? element.closest('[role="gridcell"], [role="columnheader"]')
@@ -370,7 +361,7 @@ export function useCellSelection<R, SR>({
   }
 
   function handleCellMouseDown(args: CellMouseArgs<R, SR>, event: CellMouseEvent) {
-    if (!enabled || event.isGridDefaultPrevented()) return;
+    if (event.isGridDefaultPrevented()) return;
     const { column, rowIdx } = args;
     const position: Position = { idx: column.idx, rowIdx };
 
@@ -400,7 +391,7 @@ export function useCellSelection<R, SR>({
     column: CalculatedColumn<R, SR>,
     event: React.MouseEvent<HTMLDivElement>
   ) {
-    if (!enabled || event.button !== 0 || rows.length === 0) return;
+    if (event.button !== 0 || rows.length === 0) return;
     if (isElement(event.target) && event.target.closest('.rdg-resize-handle') !== null) return;
 
     if (column.key === ROW_HEADER_COLUMN_KEY) {
@@ -411,8 +402,7 @@ export function useCellSelection<R, SR>({
 
     const position: Position = { idx: column.idx, rowIdx: 0 };
     const { anchor, base } = getStart(event, position);
-    // dragging a draggable column reorders it, so it can only select a single column
-    startSelecting('COLUMN', anchor, position, base, event, !column.draggable);
+    startSelecting('COLUMN', anchor, position, base, event, true);
   }
 
   /**
@@ -423,7 +413,7 @@ export function useCellSelection<R, SR>({
       range,
       columns: columns
         .slice(range.startIdx, range.endIdx + 1)
-        .filter((column) => !isCellSelectionUtilityColumn(column.key)),
+        .filter((column) => !isRowHeaderColumn(column.key)),
       rows: rows.slice(range.startRowIdx, range.endRowIdx + 1)
     }));
   }
@@ -450,7 +440,7 @@ export function useCellSelection<R, SR>({
   }
 
   function handleCellContextMenu(args: CellMouseArgs<R, SR>, event: CellMouseEvent) {
-    if (!enabled || event.isGridDefaultPrevented()) return;
+    if (event.isGridDefaultPrevented()) return;
     const { column, rowIdx } = args;
 
     if (column.key === ROW_HEADER_COLUMN_KEY) {
@@ -479,7 +469,7 @@ export function useCellSelection<R, SR>({
     column: CalculatedColumn<R, SR>,
     event: React.MouseEvent<HTMLDivElement>
   ) {
-    if (!enabled || rows.length === 0) return;
+    if (rows.length === 0) return;
 
     if (column.key === ROW_HEADER_COLUMN_KEY) {
       openContextMenu([getAllRange()], undefined, 'ALL', event);
@@ -500,7 +490,7 @@ export function useCellSelection<R, SR>({
    * rendering
    */
   function isUtilityColumn(idx: number) {
-    return isCellSelectionUtilityColumn(columns[idx].key);
+    return isRowHeaderColumn(columns[idx].key);
   }
 
   function getRowSelectedRanges(rowIdx: number) {

@@ -1,6 +1,6 @@
 import { page } from 'vite-plus/test/browser';
 
-import { DataGrid, SelectColumn, type Column } from '../../src';
+import { DataGrid, RowHeaderColumn, type Column } from '../../src';
 
 const grid = page.getGrid();
 
@@ -9,14 +9,11 @@ interface Row {
   name: string;
 }
 
-const columns: readonly Column<Row, Row>[] = [
-  SelectColumn,
+const columns: readonly Column<Row>[] = [
+  RowHeaderColumn,
   {
     key: 'name',
-    name: 'Name',
-    renderSummaryCell(props) {
-      return props.row.name;
-    }
+    name: 'Name'
   }
 ];
 
@@ -26,30 +23,13 @@ const rows: readonly Row[] = [
   { id: 3, name: 'Row 3' }
 ];
 
-const topSummaryRows: readonly Row[] = [
-  { id: 4, name: 'Top Summary Row 1' },
-  { id: 5, name: 'Top Summary Row 2' }
-];
-
-const bottomSummaryRows: readonly Row[] = [
-  { id: 6, name: 'Bottom Summary Row 1' },
-  { id: 7, name: 'Bottom Summary Row 2' }
-];
-
 function rowKeyGetter(row: Row) {
   return row.id;
 }
 
 test('basic grid', async () => {
   await page.render(
-    <DataGrid
-      rowKeyGetter={rowKeyGetter}
-      columns={columns}
-      rows={rows}
-      topSummaryRows={topSummaryRows}
-      bottomSummaryRows={bottomSummaryRows}
-      style={{ height: 350 }}
-    />
+    <DataGrid rowKeyGetter={rowKeyGetter} columns={columns} rows={rows} style={{ height: 350 }} />
   );
 
   await expect.element(grid).toMatchScreenshot('basic-grid');

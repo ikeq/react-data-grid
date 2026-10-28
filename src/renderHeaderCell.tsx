@@ -1,7 +1,7 @@
 import { css } from 'ecij';
 
 import type { RenderHeaderCellContentProps } from './types';
-import { useRenderers } from './DataGridRenderersContext';
+import { renderSortIcon, renderSortPriority } from './sortStatus';
 
 const headerSortCellClassname = css`
   @layer rdg.SortableHeaderCell {
@@ -19,6 +19,10 @@ const headerSortName = css`
 
 const headerSortNameClassname = `rdg-header-sort-name ${headerSortName}`;
 
+/**
+ * The default header cell content: the column name, and the sort status of sortable columns.
+ * It doesn't sort the column: render a control that calls `onSort` to sort it.
+ */
 export function renderHeaderCell<R, SR>({
   column,
   sortDirection,
@@ -26,25 +30,13 @@ export function renderHeaderCell<R, SR>({
 }: RenderHeaderCellContentProps<R, SR>) {
   if (!column.sortable) return column.name;
 
-  return <SortableHeaderCell column={column} sortDirection={sortDirection} priority={priority} />;
-}
-
-type SortableHeaderCellProps<R, SR> = Pick<
-  RenderHeaderCellContentProps<R, SR>,
-  'column' | 'sortDirection' | 'priority'
->;
-
-function SortableHeaderCell<R, SR>({
-  column,
-  sortDirection,
-  priority
-}: SortableHeaderCellProps<R, SR>) {
-  const renderSortStatus = useRenderers<R, SR>()!.renderSortStatus!;
-
   return (
     <span className={headerSortCellClassname}>
       <span className={headerSortNameClassname}>{column.name}</span>
-      <span>{renderSortStatus({ sortDirection, priority })}</span>
+      <span>
+        {renderSortIcon({ sortDirection })}
+        {renderSortPriority({ priority })}
+      </span>
     </span>
   );
 }

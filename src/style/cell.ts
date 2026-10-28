@@ -20,7 +20,7 @@ export const cell = css`
     outline: none;
 
     /*
-     * The active cell box is only drawn when the cell isn't in the cell selection, for example in summary rows:
+     * The active cell box is only drawn when the cell isn't in the cell selection, for example when the selection is cleared:
      * the selection draws the selected cells with its background and the border around each range.
      */
     &[aria-selected='true']:not(.rdg-cell-range-selected)::before {
@@ -97,38 +97,6 @@ export const rowHeaderCornerCellClassnames = `${rowHeaderCornerCellClassname} ${
 
 export const cellFrozenStartClassname = `rdg-cell-frozen-start ${cellFrozenBase} ${cellFrozenEdge}`;
 export const cellFrozenEndClassname = `rdg-cell-frozen-end ${cellFrozenBase} ${cellFrozenEdge}`;
-
-const cellDragHandle = css`
-  @layer rdg.DragHandle {
-    --rdg-drag-handle-size: 8px;
-    z-index: 0;
-    cursor: move;
-    inline-size: var(--rdg-drag-handle-size);
-    block-size: var(--rdg-drag-handle-size);
-    background-color: var(--rdg-selection-color);
-    place-self: end;
-
-    &:hover {
-      --rdg-drag-handle-size: 16px;
-      border: 2px solid var(--rdg-selection-color);
-      background-color: var(--rdg-background-color);
-    }
-
-    /* keep the handle visible on both Canvas and SelectedItem backgrounds */
-    @media (forced-colors: active) {
-      outline: 1px solid Canvas;
-    }
-  }
-`;
-
-export const cellDragHandleFrozenClassname = css`
-  @layer rdg.DragHandle {
-    z-index: 1;
-    position: sticky;
-  }
-`;
-
-export const cellDragHandleClassname = `rdg-cell-drag-handle ${cellDragHandle}`;
 
 const cellRangeSelected = css`
   @layer rdg.Cell {

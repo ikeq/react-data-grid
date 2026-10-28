@@ -9,80 +9,17 @@ export const row = css`
 
     /*
      * Zebra stripes, starting with the first row (rowIdx 0).
-     * The row's background is replaced through the variable, so hovered and selected rows, selected cells,
-     * and editors, which set their own background or use the variable, keep working.
+     * The row's background is replaced through the variable, so hovered rows and selected cells,
+     * which set their own background, keep working.
      */
-    &.rdg-row-even:not(.rdg-summary-row) {
+    &.rdg-row-even {
       --rdg-background-color: var(--rdg-row-stripe-background-color);
     }
 
     &:hover {
       background-color: var(--rdg-row-hover-background-color);
     }
-
-    &:focus {
-      outline: none;
-    }
-
-    &[tabindex='0'] {
-      /* we render the outline in a pseudo element as otherwise cells render above it */
-      &::after {
-        content: '';
-        grid-column: 1 / -1;
-        z-index: 1;
-        pointer-events: none;
-        border: var(--rdg-selection-width) solid var(--rdg-selection-color);
-      }
-
-      & > .rdg-cell-frozen-start:first-child::before,
-      & > .rdg-cell-frozen-end:last-child::after {
-        content: '';
-        display: inline-block;
-        position: absolute;
-        inset-block: 0;
-      }
-
-      & > .rdg-cell-frozen-start:first-child::before {
-        inset-inline-start: 0;
-        border-inline-start: var(--rdg-selection-width) solid var(--rdg-selection-color);
-      }
-
-      & > .rdg-cell-frozen-end:last-child::after {
-        inset-inline-end: 0;
-        border-inline-end: var(--rdg-selection-width) solid var(--rdg-selection-color);
-      }
-    }
-
-    &[aria-selected='true'] {
-      background-color: var(--rdg-row-selected-background-color);
-
-      &:hover {
-        background-color: var(--rdg-row-selected-hover-background-color);
-      }
-
-      @media (forced-colors: active) {
-        /* CanvasText is not guaranteed to contrast with SelectedItem */
-        --rdg-selection-color: SelectedItemText;
-        --rdg-checkbox-focus-color: SelectedItemText;
-
-        /*
-         * Set on the property rather than on the selected row tokens,
-         * so the selection stays visible when apps override the tokens.
-         * There is no text color, so text keeps its forced color, and Chromium draws a backplate behind it.
-         */
-        &,
-        &:hover {
-          background-color: SelectedItem;
-        }
-      }
-    }
   }
 `;
 
 export const rowClassname = `rdg-row ${row}`;
-
-export const rowActiveClassname = 'rdg-row-active';
-
-export const topSummaryRowClassname = 'rdg-top-summary-row';
-
-export const bottomSummaryRowClassname = 'rdg-bottom-summary-row';

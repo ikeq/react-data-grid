@@ -1,5 +1,4 @@
 import { memo, type MouseEvent } from 'react';
-import { css } from 'ecij';
 
 import { useRovingTabIndex } from './hooks';
 import {
@@ -10,8 +9,6 @@ import {
   createCellEvent,
   getCellClassname,
   getCellStyle,
-  isCellEditableUtil,
-  isCellSelectionUtilityColumn,
   ROW_HEADER_COLUMN_KEY
 } from './utils';
 import type { CellMouseEventHandler, RenderCellProps } from './types';
@@ -21,25 +18,11 @@ import {
   headerCellRangeSelectedClassname
 } from './style/cell';
 
-const cellDraggedOver = css`
-  @layer rdg.Cell {
-    background-color: #ccccff;
-
-    @media (forced-colors: active) {
-      background-color: Mark;
-    }
-  }
-`;
-
-const cellDraggedOverClassname = `rdg-cell-dragged-over ${cellDraggedOver}`;
-
 function Cell<R, SR>({
   column,
-  colSpan,
   isCellActive,
-  isCellSelected = false,
-  cellSelectionEdges = 0,
-  isDraggedOver,
+  isCellSelected,
+  cellSelectionEdges,
   row,
   rowIdx,
   className,
@@ -51,7 +34,6 @@ function Cell<R, SR>({
   onCellDoubleClick,
   onContextMenu,
   onCellContextMenu,
-  onRowChange,
   setActivePosition,
   style,
   ...props
@@ -61,15 +43,13 @@ function Cell<R, SR>({
   const { cellClass } = column;
   let selectedClassname: string | undefined;
   if (isCellSelected) {
-    if (column.key === ROW_HEADER_COLUMN_KEY) {
-      selectedClassname = headerCellRangeSelectedClassname;
-    } else if (!isCellSelectionUtilityColumn(column.key)) {
-      selectedClassname = cellRangeSelectedClassname;
-    }
+    selectedClassname =
+      column.key === ROW_HEADER_COLUMN_KEY
+        ? headerCellRangeSelectedClassname
+        : cellRangeSelectedClassname;
   }
   className = getCellClassname(
     column,
-    isDraggedOver && cellDraggedOverClassname,
     selectedClassname,
     cellSelectionEdges !== 0 && cellRangeEdgeClassname,
     (cellSelectionEdges & CELL_SELECTION_EDGE_TOP) !== 0 && 'rdg-cell-range-edge-top',
@@ -79,11 +59,6 @@ function Cell<R, SR>({
     typeof cellClass === 'function' ? cellClass(row) : cellClass,
     className
   );
-  const isEditable = isCellEditableUtil(column, row);
-
-  function setActivePositionWrapper(enableEditor = false) {
-    setActivePosition({ idx: column.idx, rowIdx }, { enableEditor });
-  }
 
   function handleMouseEvent(
     event: React.MouseEvent<HTMLDivElement>,
@@ -92,7 +67,7 @@ function Cell<R, SR>({
     let eventHandled = false;
     if (eventHandler) {
       const cellEvent = createCellEvent(event);
-      eventHandler({ rowIdx, row, column, setActivePosition: setActivePositionWrapper }, cellEvent);
+      eventHandler({ rowIdx, row, column }, cellEvent);
       eventHandled = cellEvent.isGridDefaultPrevented();
     }
     return eventHandled;
@@ -102,7 +77,7 @@ function Cell<R, SR>({
     onMouseDown?.(event);
     if (!handleMouseEvent(event, onCellMouseDown)) {
       // activate the cell if the event is not prevented
-      setActivePositionWrapper();
+      setActivePosition({ idx: column.idx, rowIdx });
     }
   }
 
@@ -113,10 +88,7 @@ function Cell<R, SR>({
 
   function handleDoubleClick(event: MouseEvent<HTMLDivElement>) {
     onDoubleClick?.(event);
-    if (!handleMouseEvent(event, onCellDoubleClick)) {
-      // go into edit mode if the event is not prevented
-      setActivePositionWrapper(true);
-    }
+    handleMouseEvent(event, onCellDoubleClick);
   }
 
   function handleContextMenu(event: MouseEvent<HTMLDivElement>) {
@@ -124,21 +96,15 @@ function Cell<R, SR>({
     handleMouseEvent(event, onCellContextMenu);
   }
 
-  function handleRowChange(newRow: R) {
-    onRowChange(column, rowIdx, newRow);
-  }
-
   return (
     <div
       role="gridcell"
       aria-colindex={column.idx + 1} // aria-colindex is 1-based
-      aria-colspan={colSpan > 1 ? colSpan : undefined}
       aria-selected={isCellActive}
-      aria-readonly={!isEditable || undefined}
       tabIndex={tabIndex}
       className={className}
       style={{
-        ...getCellStyle(column, colSpan),
+        ...getCellStyle(column),
         ...style
       }}
       onClick={handleClick}
@@ -152,18 +118,10 @@ function Cell<R, SR>({
         column,
         row,
         rowIdx,
-        isCellEditable: isEditable,
-        tabIndex: childTabIndex,
-        onRowChange: handleRowChange
+        tabIndex: childTabIndex
       })}
     </div>
   );
 }
 
-const MemoCell = memo(Cell) as <R, SR>(props: RenderCellProps<R, SR>) => React.JSX.Element;
-
-export { MemoCell as Cell };
-
-export function defaultRenderCell<R, SR>(key: React.Key, props: RenderCellProps<R, SR>) {
-  return <MemoCell key={key} {...props} />;
-}
+export default memo(Cell) as <R, SR>(props: RenderCellProps<R, SR>) => React.JSX.Element;

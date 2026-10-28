@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { page, userEvent } from 'vite-plus/test/browser';
 
-import { DataGrid, type Column, type RenderEditCellContentProps } from '../../src';
+import { DataGrid, type Column } from '../../src';
 
 // The grid can be portaled into another window, like an iframe or a popup window.
 // Its DOM nodes then belong to that other window, while its JS still runs in this window.
@@ -21,40 +20,15 @@ const columns: readonly Column<unknown>[] = Array.from({ length: 20 }, (_, i) =>
 
 const noRows: readonly unknown[] = [];
 
-// unlike `renderTextEditor`, this editor does not commit on blur
-function renderEditCell({ row, column, onRowChange }: RenderEditCellContentProps<Row>) {
-  const key = column.key as keyof Row;
-
-  return (
-    <input
-      autoFocus
-      aria-label="editor"
-      value={row[key]}
-      onChange={(event) => onRowChange({ ...row, [key]: event.target.value })}
-    />
-  );
-}
-
-const editableColumns: readonly Column<Row>[] = [
-  { key: 'a', name: 'A', renderEditCell },
-  { key: 'b', name: 'B', renderEditCell }
-];
-
-const initialRows: readonly Row[] = [
+const rows: readonly Row[] = [
   { a: 'a1', b: 'b1' },
   { a: 'a2', b: 'b2' }
 ];
 
-function EditableGrid() {
-  const [rows, setRows] = useState(initialRows);
-
-  return (
-    <>
-      <div>outside</div>
-      <DataGrid columns={editableColumns} rows={rows} onRowsChange={setRows} />
-    </>
-  );
-}
+const rowColumns: readonly Column<Row>[] = [
+  { key: 'a', name: 'A' },
+  { key: 'b', name: 'B' }
+];
 
 async function createIframe() {
   const iframe = document.createElement('iframe');
@@ -108,54 +82,12 @@ test('should observe grid resizes with the ResizeObserver of the window the grid
 
 test('should navigate between cells with the keyboard', async () => {
   const { iframeDocument, frame } = await createIframe();
-  await page.render(createPortal(<EditableGrid />, iframeDocument.body));
+  await page.render(
+    createPortal(<DataGrid columns={rowColumns} rows={rows} />, iframeDocument.body)
+  );
 
   await userEvent.click(frame.getCell({ name: 'a1' }));
   await expect.element(frame.getActiveCell()).toHaveTextContent('a1');
   await userEvent.keyboard('{ArrowRight}');
   await expect.element(frame.getActiveCell()).toHaveTextContent('b1');
-});
-
-test('should commit changes and navigate out of the editor on Tab', async () => {
-  const { iframeDocument, frame } = await createIframe();
-  await page.render(createPortal(<EditableGrid />, iframeDocument.body));
-  const editor = frame.getByRole('textbox', { name: 'editor' });
-
-  await userEvent.dblClick(frame.getCell({ name: 'a1' }));
-  await expect.element(editor).toHaveValue('a1');
-  await userEvent.keyboard('new{Tab}');
-  await expect.element(editor).not.toBeInTheDocument();
-  await expect.element(frame.getActiveCell()).toHaveTextContent('b1');
-  await expect.element(frame.getCell({ name: 'a1new' })).toBeInTheDocument();
-});
-
-test('should commit changes and close the editor when clicked outside', async () => {
-  const { iframeDocument, frame } = await createIframe();
-  await page.render(createPortal(<EditableGrid />, iframeDocument.body));
-  const editor = frame.getByRole('textbox', { name: 'editor' });
-
-  await userEvent.dblClick(frame.getCell({ name: 'a1' }));
-  await expect.element(editor).toHaveValue('a1');
-  await userEvent.keyboard('new');
-  await userEvent.click(frame.getByText('outside'));
-  await expect.element(editor).not.toBeInTheDocument();
-  await expect.element(frame.getCell({ name: 'a1new' })).toBeInTheDocument();
-});
-
-test('should commit changes and close the editor when clicked outside the iframe', async () => {
-  const { iframeDocument, frame } = await createIframe();
-  await page.render(
-    <>
-      <div>outer</div>
-      {createPortal(<EditableGrid />, iframeDocument.body)}
-    </>
-  );
-  const editor = frame.getByRole('textbox', { name: 'editor' });
-
-  await userEvent.dblClick(frame.getCell({ name: 'a1' }));
-  await expect.element(editor).toHaveValue('a1');
-  await userEvent.keyboard('new');
-  await userEvent.click(page.getByText('outer'));
-  await expect.element(editor).not.toBeInTheDocument();
-  await expect.element(frame.getCell({ name: 'a1new' })).toBeInTheDocument();
 });

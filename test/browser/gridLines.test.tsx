@@ -1,21 +1,15 @@
 import { page, userEvent } from 'vite-plus/test/browser';
 
 import { DataGrid, RowHeaderColumn } from '../../src';
-import type { ColumnOrColumnGroup } from '../../src';
+import type { Column } from '../../src';
 
 interface Row {
   id: number;
 }
 
-const columns: readonly ColumnOrColumnGroup<Row>[] = [
+const columns: readonly Column<Row>[] = [
   { key: 'id', name: 'ID' },
-  {
-    name: 'Group',
-    children: [
-      { key: 'a', name: 'A' },
-      { key: 'b', name: 'B' }
-    ]
-  }
+  { key: 'a', name: 'A' }
 ];
 
 const rows: readonly Row[] = [{ id: 1 }, { id: 2 }];
@@ -54,24 +48,19 @@ test('the grid has no border', async () => {
 
 test('rows are striped, starting with the first row', async () => {
   const stripedRows: readonly Row[] = [{ id: 1 }, { id: 2 }, { id: 3 }];
-  const summaryRows: readonly unknown[] = [{}];
-  await page.render(
-    <DataGrid columns={columns} rows={stripedRows} bottomSummaryRows={summaryRows} />
-  );
+  await page.render(<DataGrid columns={columns} rows={stripedRows} />);
   const grid = page.getGrid().element();
   const background = getComputedStyle(grid).backgroundColor;
-  const [row1, row2, row3, summaryRow] = page.getRow().elements();
+  const [row1, row2, row3] = page.getRow().elements();
 
   const stripe = getComputedStyle(row1).backgroundColor;
   expect(stripe).not.toBe(background);
   expect(getComputedStyle(row2).backgroundColor).toBe(background);
   expect(getComputedStyle(row3).backgroundColor).toBe(stripe);
-  // the summary row is not striped
-  expect(getComputedStyle(summaryRow).backgroundColor).toBe(background);
 });
 
 test('frozen columns have a single line at their edge, and no shadow', async () => {
-  const frozenColumns: readonly ColumnOrColumnGroup<Row>[] = [
+  const frozenColumns: readonly Column<Row>[] = [
     { key: 's1', name: 'S1', frozen: 'start' },
     { key: 's2', name: 'S2', frozen: 'start' },
     { key: 'c', name: 'C' },
@@ -112,25 +101,18 @@ test('the selection border is 1px wide', async () => {
 test('only the line between the header and the data area is drawn', async () => {
   await page.render(<DataGrid columns={columns} rows={rows} />);
   const grid = page.getGrid().element();
-  const groupCell = page.getHeaderCell({ name: 'Group' }).element();
-  const spanningCell = page.getHeaderCell({ name: 'ID' }).element();
-  const columnCell = page.getHeaderCell({ name: 'A' }).element();
+  const headerCell = page.getHeaderCell({ name: 'ID' }).element();
   const dataCell = page.getCell({ name: '1', exact: true }).element();
 
-  for (const cell of [groupCell, spanningCell, columnCell]) {
-    expect(getComputedStyle(cell).backgroundColor).toBe(getComputedStyle(grid).backgroundColor);
-  }
+  expect(getComputedStyle(headerCell).backgroundColor).toBe(getComputedStyle(grid).backgroundColor);
 
-  for (const cell of [groupCell, spanningCell, columnCell, dataCell]) {
+  for (const cell of [headerCell, dataCell]) {
     const style = getComputedStyle(cell);
     expect(style.borderInlineStartWidth).toBe('0px');
     expect(style.borderInlineEndWidth).toBe('0px');
     expect(style.borderBlockStartWidth).toBe('0px');
   }
 
-  // the cells of the last header row, including the cells that span down to it, draw the line
-  expect(getComputedStyle(spanningCell).borderBlockEndWidth).toBe('1px');
-  expect(getComputedStyle(columnCell).borderBlockEndWidth).toBe('1px');
-  expect(getComputedStyle(groupCell).borderBlockEndWidth).toBe('0px');
+  expect(getComputedStyle(headerCell).borderBlockEndWidth).toBe('1px');
   expect(getComputedStyle(dataCell).borderBlockEndWidth).toBe('0px');
 });

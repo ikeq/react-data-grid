@@ -5,8 +5,7 @@ import type { Column, DataGridHandle } from '../../src';
 import { setup } from './utils';
 
 const rows: readonly number[] = Array.from({ length: 50 }, (_, i) => i);
-const summaryRows: readonly number[] = Array.from({ length: 2 }, (_, i) => i + 50);
-const columns: Column<number, number>[] = [];
+const columns: Column<number>[] = [];
 
 for (let i = 0; i < 50; i++) {
   const key = String(i);
@@ -15,9 +14,6 @@ for (let i = 0; i < 50; i++) {
     name: key,
     frozen: i < 5,
     renderCell(props) {
-      return `${props.column.key}×${props.row}`;
-    },
-    renderSummaryCell(props) {
       return `${props.column.key}×${props.row}`;
     }
   });
@@ -29,7 +25,6 @@ test('scrollToCell', async () => {
     ref,
     columns,
     rows,
-    topSummaryRows: summaryRows,
     rowHeight: 60
   });
 
@@ -37,7 +32,6 @@ test('scrollToCell', async () => {
 
   await validateCellVisibility('0×0', true);
   await validateCellVisibility('40×30', false);
-  await validateCellVisibility('0×51', true);
 
   // should scroll to a cell when a valid position is specified
   ref.current!.scrollToCell({ idx: 40, rowIdx: 30 });
@@ -96,7 +90,7 @@ test('scrollToCell', async () => {
 
 test('scrollToCell with end-frozen columns', async () => {
   const ref = createRef<DataGridHandle>();
-  const endFrozenColumns: Column<number, number>[] = columns.map((column, i) => ({
+  const endFrozenColumns: Column<number>[] = columns.map((column, i) => ({
     ...column,
     frozen: i < 5 ? true : i >= 48 ? 'end' : false
   }));
@@ -105,7 +99,6 @@ test('scrollToCell with end-frozen columns', async () => {
     ref,
     columns: endFrozenColumns,
     rows,
-    topSummaryRows: summaryRows,
     rowHeight: 60
   });
 

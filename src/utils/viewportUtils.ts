@@ -1,4 +1,4 @@
-import type { CalculatedColumn, ColSpanArgs } from '../types';
+import type { CalculatedColumn } from '../types';
 
 // These functions build arrays with plain loops instead of using generators:
 // iterating over generator objects is much slower, and React Compiler doesn't support `yield`
@@ -50,30 +50,15 @@ export function getViewportColumns<R, SR>(
 }
 
 // The callback receives each cell's values as arguments, so no object is allocated per cell
-export function mapColumnsWithColSpan<R, SR, T>(
+export function mapColumns<R, SR, T>(
   viewportColumns: readonly CalculatedColumn<R, SR>[],
   activeColumnIdx: number,
-  colSpanArgs: ColSpanArgs<R, SR> | undefined,
-  callback: (
-    column: CalculatedColumn<R, SR>,
-    isCellActive: boolean,
-    colSpan: number,
-    index: number
-  ) => T
+  callback: (column: CalculatedColumn<R, SR>, isCellActive: boolean, index: number) => T
 ): T[] {
   const results: T[] = [];
-  // index of the first column after the previous cell, including the columns it spans
-  let nextColumnIdx = 0;
 
   for (const column of viewportColumns) {
-    // skip columns covered by colSpan.
-    // The viewport columns are ordered by index, but there can be gaps between them,
-    // so the skipped columns are counted by index, not by their position in the list
-    if (column.idx < nextColumnIdx) continue;
-
-    const colSpan = column.getColSpan(colSpanArgs);
-    results.push(callback(column, column.idx === activeColumnIdx, colSpan, results.length));
-    nextColumnIdx = column.idx + colSpan;
+    results.push(callback(column, column.idx === activeColumnIdx, results.length));
   }
 
   return results;

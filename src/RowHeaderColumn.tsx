@@ -16,7 +16,6 @@ export const RowHeaderColumn: Column<any, any> = {
   minWidth: 40,
   resizable: false,
   sortable: false,
-  draggable: false,
   frozen: true,
   cellClass: rowHeaderCellClassname,
   renderCell({ rowIdx }) {
