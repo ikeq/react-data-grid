@@ -13,7 +13,7 @@ import type {
 } from './types';
 import type { DataGridProps } from './DataGrid';
 import HeaderCell from './HeaderCell';
-import { cell, cellFrozenBase } from './style/cell';
+import { cell, cellFrozenBase, rowHeaderCornerCellClassname } from './style/cell';
 import { rowActiveClassname } from './style/row';
 
 type SharedDataGridProps<R, SR, K extends React.Key> = Pick<
@@ -60,7 +60,7 @@ const headerRow = css`
      * The line between the header and the data area, the only line in the grid.
      * It is drawn on the cells of the last header row, which are sticky, so it stays when the rows scroll under them.
      */
-    &:nth-last-child(1 of .rdg-header-row) > .${cell} {
+    &:nth-last-child(1 of .rdg-header-row) > .${cell}:not(.${rowHeaderCornerCellClassname}) {
       border-block-end: var(--rdg-border-width) solid var(--rdg-border-color);
     }
 

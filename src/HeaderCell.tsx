@@ -12,11 +12,12 @@ import {
   getLeftRightKey,
   isCtrlKeyHeldDown,
   isElement,
+  ROW_HEADER_COLUMN_KEY,
   stopPropagation
 } from './utils';
 import type { CalculatedColumn, SortColumn, SortEvent } from './types';
 import type { HeaderRowProps } from './HeaderRow';
-import { headerCellRangeSelectedClassname } from './style/cell';
+import { headerCellRangeSelectedClassname, rowHeaderCornerCellClassnames } from './style/cell';
 
 const cellResizable = css`
   @layer rdg.HeaderCell {
@@ -129,6 +130,7 @@ export default function HeaderCell<R, SR>({
 
   const className = getCellClassname(
     column,
+    column.key === ROW_HEADER_COLUMN_KEY && rowHeaderCornerCellClassnames,
     column.headerCellClass,
     resizable && cellResizableClassname,
     draggable && cellDraggableClassname,

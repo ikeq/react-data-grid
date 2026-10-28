@@ -61,7 +61,9 @@ export const cellFrozenBase = css`
 // a line between the frozen columns and the scrolling columns, like the line between the header and the data area
 const cellFrozenEdge = css`
   @layer rdg.Cell {
-    &.rdg-cell-frozen-start:nth-last-child(1 of .rdg-cell-frozen-start) {
+    &.rdg-cell-frozen-start:nth-last-child(1 of .rdg-cell-frozen-start):not(
+        .rdg-row-header-corner-cell
+      ) {
       border-inline-end: var(--rdg-border-width) solid var(--rdg-border-color);
     }
 
@@ -70,6 +72,28 @@ const cellFrozenEdge = css`
     }
   }
 `;
+
+// the top-left cell, the header cell of `RowHeaderColumn`, has no lines, like the corner of a spreadsheet
+export const rowHeaderCornerCellClassname = 'rdg-row-header-corner-cell';
+
+// The header line starts after the top-left cell, and the frozen column line starts below it,
+// so the pixel where they meet is drawn in the cell's end bottom corner, to join them
+const rowHeaderCornerCell = css`
+  @layer rdg.Cell {
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block-end: 0;
+      inset-inline-end: 0;
+      inline-size: var(--rdg-border-width);
+      block-size: var(--rdg-border-width);
+      background-color: var(--rdg-border-color);
+      pointer-events: none;
+    }
+  }
+`;
+
+export const rowHeaderCornerCellClassnames = `${rowHeaderCornerCellClassname} ${rowHeaderCornerCell}`;
 
 export const cellFrozenStartClassname = `rdg-cell-frozen-start ${cellFrozenBase} ${cellFrozenEdge}`;
 export const cellFrozenEndClassname = `rdg-cell-frozen-end ${cellFrozenBase} ${cellFrozenEdge}`;

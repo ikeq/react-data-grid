@@ -279,27 +279,27 @@ test('should remeasure flex columns when resizing a column', async () => {
   });
 
   await testGridTemplateColumns({
-    chrome: '639.328px 639.328px 639.344px',
-    firefox: '639.333px 639.333px 639.333px',
-    webkit: '639.328125px 639.328125px 639.328125px'
+    chrome: '640px 640px 640px',
+    firefox: '640px 640px 640px',
+    webkit: '640px 640px 640px'
   });
   await autoResize('col1');
   await testGridTemplateColumns({
-    chrome: '78.1406px 919.922px 919.938px',
-    firefox: '78.1667px 919.917px 919.917px',
-    firefoxCI: '99.5px 909.25px 909.25px',
-    webkit: '78.140625px 919.921875px 919.921875px',
-    webkitCI: '101.796875px 908.09375px 908.09375px'
+    chrome: '78.1406px 920.922px 920.938px',
+    firefox: '78.1667px 920.917px 920.917px',
+    firefoxCI: '99.5px 910.25px 910.25px',
+    webkit: '78.140625px 920.921875px 920.921875px',
+    webkitCI: '101.796875px 909.09375px 909.09375px'
   });
   expect(onColumnResize).toHaveBeenCalledOnce();
   // onColumnResize is not called if width is not changed
   await autoResize('col1');
   await testGridTemplateColumns({
-    chrome: '78.1406px 919.922px 919.938px',
-    firefox: '78.1667px 919.917px 919.917px',
-    firefoxCI: '99.5px 909.25px 909.25px',
-    webkit: '78.140625px 919.921875px 919.921875px',
-    webkitCI: '101.796875px 908.09375px 908.09375px'
+    chrome: '78.1406px 920.922px 920.938px',
+    firefox: '78.1667px 920.917px 920.917px',
+    firefoxCI: '99.5px 910.25px 910.25px',
+    webkit: '78.140625px 920.921875px 920.921875px',
+    webkitCI: '101.796875px 909.09375px 909.09375px'
   });
   expect(onColumnResize).toHaveBeenCalledOnce();
 });

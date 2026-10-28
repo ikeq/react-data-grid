@@ -7,6 +7,15 @@ export const row = css`
     grid-template: subgrid / subgrid;
     background-color: var(--rdg-background-color);
 
+    /*
+     * Zebra stripes, starting with the first row (rowIdx 0).
+     * The row's background is replaced through the variable, so hovered and selected rows, selected cells,
+     * and editors, which set their own background or use the variable, keep working.
+     */
+    &.rdg-row-even:not(.rdg-summary-row) {
+      --rdg-background-color: var(--rdg-row-stripe-background-color);
+    }
+
     &:hover {
       background-color: var(--rdg-row-hover-background-color);
     }

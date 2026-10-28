@@ -26,6 +26,8 @@ const root = css`
     --rdg-header-background-color: var(--rdg-background-color);
     --rdg-header-draggable-background-color: light-dark(hsl(0deg 0% 90.5%), hsl(0deg 0% 17.5%));
     --rdg-row-hover-background-color: light-dark(hsl(0deg 0% 96%), hsl(0deg 0% 9%));
+    /* the background of every other row, starting with the first row */
+    --rdg-row-stripe-background-color: light-dark(hsl(0deg 0% 97.5%), hsl(0deg 0% 15%));
     --rdg-row-selected-background-color: light-dark(hsl(207deg 76% 92%), hsl(207deg 76% 42%));
     --rdg-row-selected-hover-background-color: light-dark(hsl(207deg 76% 88%), hsl(207deg 76% 38%));
     --rdg-checkbox-focus-color: hsl(207deg 100% 69%);
@@ -60,7 +62,6 @@ const root = css`
     contain: content;
     content-visibility: auto;
     block-size: 350px;
-    border: 1px solid var(--rdg-border-color);
     box-sizing: border-box;
     overflow: auto;
     background-color: var(--rdg-background-color);
