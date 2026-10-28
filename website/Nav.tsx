@@ -60,7 +60,7 @@ export type Theme = 'light' | 'dark' | 'system';
 export default function Nav() {
   const demosNavId = useId();
   const linksNavId = useId();
-  const [theme, setTheme] = useState<Theme>('system');
+  const [theme, setTheme] = useState<Theme>('light');
 
   function onThemeChange(theme: Theme) {
     document.startViewTransition(() => {
