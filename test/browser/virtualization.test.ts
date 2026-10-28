@@ -7,6 +7,7 @@ const headerCells = page.getHeaderCell();
 const rows = page.getRow();
 const cells = page.getCell();
 
+// the header row has the same height as the rows, so the expected row indexes are easy to compute
 const rowHeight = 35;
 
 function setupGrid(
@@ -33,6 +34,7 @@ function setupGrid(
     columns,
     rows,
     rowHeight,
+    headerRowHeight: rowHeight,
     enableVirtualization
   });
 }
@@ -217,7 +219,7 @@ test('virtualization is enabled with start + end frozen columns', async () => {
     });
   }
 
-  await setup({ columns, rows, rowHeight });
+  await setup({ columns, rows, rowHeight, headerRowHeight: rowHeight });
 
   // At scroll 0: start (0,1,2) + early unfrozen + end (28,29) rendered; middle virtualized away.
   scrollGrid({ left: 0 });

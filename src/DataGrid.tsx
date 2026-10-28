@@ -97,12 +97,12 @@ export interface DataGridProps<R, K extends Key = Key> extends SharedDivProps {
    */
   /**
    * Height of each row in pixels
-   * @default 35
+   * @default 30
    */
   rowHeight?: Maybe<number | ((row: NoInfer<R>) => number)>;
   /**
    * Height of the header row in pixels
-   * @default `rowHeight` when it is a number, otherwise 35
+   * @default 32
    */
   headerRowHeight?: Maybe<number>;
   /** A map of column widths */
@@ -231,8 +231,8 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
   /**
    * defaults
    */
-  const rowHeight = rawRowHeight ?? 35;
-  const headerRowHeight = rawHeaderRowHeight ?? (typeof rowHeight === 'number' ? rowHeight : 35);
+  const rowHeight = rawRowHeight ?? 30;
+  const headerRowHeight = rawHeaderRowHeight ?? 32;
   const noRowsFallback = renderers?.noRowsFallback;
   const enableVirtualization = rawEnableVirtualization ?? true;
 

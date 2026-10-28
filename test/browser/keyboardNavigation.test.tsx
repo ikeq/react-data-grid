@@ -83,17 +83,17 @@ test('keyboard navigation', async () => {
 
   // page {up,down}
   await userEvent.keyboard('{PageDown}');
-  await validateCellPosition(0, 29);
+  await validateCellPosition(0, 34);
   await userEvent.keyboard('{PageDown}');
-  await validateCellPosition(0, 58);
+  await validateCellPosition(0, 68);
   await userEvent.keyboard('{PageUp}');
-  await validateCellPosition(0, 29);
+  await validateCellPosition(0, 34);
 
   // home/end navigation
   await userEvent.keyboard('{end}');
-  await validateCellPosition(6, 29);
+  await validateCellPosition(6, 34);
   await userEvent.keyboard('{home}');
-  await validateCellPosition(0, 29);
+  await validateCellPosition(0, 34);
   await userEvent.keyboard('{Control>}{end}{/Control}');
   await validateCellPosition(6, 100);
   await userEvent.keyboard('{arrowdown}');
