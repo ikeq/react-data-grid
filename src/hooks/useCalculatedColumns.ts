@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { clampColumnWidth } from '../utils';
+import { clampColumnWidth, getColumnTrack } from '../utils';
 import type { CalculatedColumn, Column, ColumnFrozen } from '../types';
 import { renderValue } from '../cellRenderers';
 import type { DataGridProps } from '../DataGrid';
@@ -135,7 +135,7 @@ export function useCalculatedColumns<R>({
           // the rendered width of frozen columns is read after they are rendered,
           // the min width is an estimate until then, and for the other columns
           width = renderedFrozenColumnWidths.get(column.key) ?? column.minWidth;
-          templateColumns.push(rawWidth);
+          templateColumns.push(getColumnTrack(rawWidth, column));
         }
 
         columnMetrics.set(column, { width, left });

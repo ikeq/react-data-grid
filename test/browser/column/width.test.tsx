@@ -46,3 +46,53 @@ test('frozen columns are offset by the rendered width of the frozen columns befo
     .toBeCloseTo(rowHeaderWidth, 0);
   expect(rowHeaderCell.getBoundingClientRect().left - gridLeft).toBe(0);
 });
+
+describe('maxWidth', () => {
+  const longRows: readonly Row[] = [{ a: 'x'.repeat(100), b: 'short' }];
+  const shortRows: readonly Row[] = [{ a: 'abc', b: 'short' }];
+
+  async function getFirstColumnWidth(column: Partial<Column<Row>>, rows = longRows) {
+    await page.render(
+      <DataGrid
+        columns={[
+          { key: 'a', name: 'a', ...column },
+          { key: 'b', name: 'b' }
+        ]}
+        rows={rows}
+        style={{ width: 600 }}
+      />
+    );
+    const grid = getGrid();
+    const cell = page.getCell({ name: rows[0].a });
+    await expect.element(cell).toBeInTheDocument();
+    const getTrack = () =>
+      Number.parseFloat(getComputedStyle(grid).gridTemplateColumns.split(' ')[0]);
+    const getCellWidth = () => cell.element().getBoundingClientRect().width;
+    // the cells and the tracks are sized once the rows are laid out
+    await expect.poll(() => Math.min(getTrack(), getCellWidth())).toBeGreaterThan(0);
+    const track = getTrack();
+    // the cells fill their track
+    expect(getCellWidth()).toBeCloseTo(track, 0);
+    return track;
+  }
+
+  it.each([
+    ['max-content', {}],
+    ['auto', { width: 'auto' }],
+    ['1fr', { width: '1fr' }],
+    ['a number', { width: 300 }]
+  ])('caps columns with %s widths', async (_, column: Partial<Column<Row>>) => {
+    await expect(getFirstColumnWidth({ ...column, maxWidth: 120 })).resolves.toBe(120);
+  });
+
+  it('max-content columns stay as wide as their content when it is narrower', async () => {
+    const width = await getFirstColumnWidth({ maxWidth: 300 }, shortRows);
+    expect(width).toBeLessThan(300);
+  });
+
+  it('is ignored when it is less than minWidth', async () => {
+    await expect(getFirstColumnWidth({ minWidth: 200, maxWidth: 120 })).resolves.toBeGreaterThan(
+      200
+    );
+  });
+});

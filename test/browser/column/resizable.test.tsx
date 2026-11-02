@@ -197,10 +197,10 @@ test('should auto resize column when resize handle is double-clicked', async () 
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 200px' });
   await autoResize('col2');
   await testGridTemplateColumns({
-    chrome: '100px 326.703px',
-    firefox: '100px 326.833px',
+    chrome: '100px 334.703px',
+    firefox: '100px 334.833px',
     firefoxCI: '100px 400px',
-    webkit: '100px 326.703125px',
+    webkit: '100px 334.703125px',
     webkitCI: '100px 400px'
   });
   expect(onColumnResize).toHaveBeenCalledExactlyOnceWith(
@@ -209,7 +209,7 @@ test('should auto resize column when resize handle is double-clicked', async () 
     expect.toSatisfy(
       (width) =>
         // Chrome and Firefox on Windows
-        (width >= 326.7 && width <= 326.9) ||
+        (width >= 334.7 && width <= 334.9) ||
         // Firefox/WebKit in CI
         width === 400
     )

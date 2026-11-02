@@ -1,4 +1,5 @@
 import type { CalculatedColumn } from '../types';
+import { getColumnMaxWidth } from './styleUtils';
 
 export * from './activePositionUtils';
 export * from './cellSelectionUtils';
@@ -19,9 +20,6 @@ export function clampColumnWidth<R>(
   width = max(width, minWidth);
 
   // ignore maxWidth if it is less than minWidth
-  if (typeof maxWidth === 'number' && maxWidth >= minWidth) {
-    return min(width, maxWidth);
-  }
-
-  return width;
+  const cappedMaxWidth = getColumnMaxWidth({ minWidth, maxWidth });
+  return cappedMaxWidth === undefined ? width : min(width, cappedMaxWidth);
 }

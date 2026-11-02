@@ -332,21 +332,21 @@ The styles are not in cascade layers, so your rules override them when their sel
 
 ### `Column<R>`
 
-| Property              | Type                                                    | Description                                                                    |
-| --------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `key`                 | `string`                                                | A unique key, also the property of the row that the default cell content shows |
-| `name`                | `string \| ReactElement`                                | Shown in the header cell by default                                            |
-| `width`               | `number \| string`                                      | Pixels, or a CSS grid track size like `'1fr'`, `'max-content'` by default      |
-| `minWidth`            | `number`                                                | `50` by default                                                                |
-| `maxWidth`            | `number`                                                |                                                                                |
-| `frozen`              | `boolean \| 'start' \| 'end'`                           | Keeps the column visible at the start or end edge, `true` is `'start'`         |
-| `resizable`           | `boolean`                                               | Shows a resize handle, a double click auto-sizes the column                    |
-| `sortable`            | `boolean`                                               | Enables `onSort`                                                               |
-| `sortDescendingFirst` | `boolean`                                               | Sorts descending first                                                         |
-| `renderCell`          | `(props: RenderCellContentProps<R>) => ReactNode`       | Cell content, `row[key]` by default                                            |
-| `renderHeaderCell`    | `(props: RenderHeaderCellContentProps<R>) => ReactNode` | Header cell content                                                            |
-| `cellClass`           | `string \| ((row: R) => string \| undefined)`           | Class names of cells                                                           |
-| `headerCellClass`     | `string`                                                | Class names of the header cell                                                 |
+| Property              | Type                                                    | Description                                                                        |
+| --------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `key`                 | `string`                                                | A unique key, also the property of the row that the default cell content shows     |
+| `name`                | `string \| ReactElement`                                | Shown in the header cell by default                                                |
+| `width`               | `number \| string`                                      | Pixels, or a CSS grid track size like `'1fr'`, `'max-content'` by default          |
+| `minWidth`            | `number`                                                | `50` by default                                                                    |
+| `maxWidth`            | `number`                                                | Also caps `max-content`, `auto` and `fr` widths, ignored when less than `minWidth` |
+| `frozen`              | `boolean \| 'start' \| 'end'`                           | Keeps the column visible at the start or end edge, `true` is `'start'`             |
+| `resizable`           | `boolean`                                               | Shows a resize handle, a double click auto-sizes the column                        |
+| `sortable`            | `boolean`                                               | Enables `onSort`                                                                   |
+| `sortDescendingFirst` | `boolean`                                               | Sorts descending first                                                             |
+| `renderCell`          | `(props: RenderCellContentProps<R>) => ReactNode`       | Cell content, `row[key]` by default                                                |
+| `renderHeaderCell`    | `(props: RenderHeaderCellContentProps<R>) => ReactNode` | Header cell content                                                                |
+| `cellClass`           | `string \| ((row: R) => string \| undefined)`           | Class names of cells                                                               |
+| `headerCellClass`     | `string`                                                | Class names of the header cell                                                     |
 
 `RenderCellContentProps<R>` is `{ column, row, rowIdx, tabIndex }`.
 
