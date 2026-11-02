@@ -1,0 +1,6 @@
+/dist
+/lib
+/coverage
+/.vitest
+/website/routeTree.gen.ts
+package-lock.json
