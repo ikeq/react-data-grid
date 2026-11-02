@@ -12,14 +12,6 @@ interface Row {
   b: string;
 }
 
-const columns: readonly Column<unknown>[] = Array.from({ length: 20 }, (_, i) => ({
-  key: String(i),
-  name: String(i),
-  width: 100
-}));
-
-const noRows: readonly unknown[] = [];
-
 const rows: readonly Row[] = [
   { a: 'a1', b: 'b1' },
   { a: 'a2', b: 'b2' }
@@ -29,6 +21,11 @@ const rowColumns: readonly Column<Row>[] = [
   { key: 'a', name: 'A' },
   { key: 'b', name: 'B' }
 ];
+
+const manyRows: readonly Row[] = Array.from({ length: 100 }, (_, i) => ({
+  a: `a${i}`,
+  b: `b${i}`
+}));
 
 async function createIframe() {
   const iframe = document.createElement('iframe');
@@ -62,22 +59,30 @@ async function createIframe() {
 test('should observe grid resizes with the ResizeObserver of the window the grid is rendered in', async () => {
   const { iframe, iframeDocument, iframeWindow, frame } = await createIframe();
   const observeSpy = vi.spyOn(iframeWindow.ResizeObserver.prototype, 'observe');
+  iframe.style.height = '200px';
+  iframeDocument.documentElement.style.blockSize = '100%';
+  iframeDocument.body.style.blockSize = '100%';
 
   await page.render(
-    createPortal(<DataGrid columns={columns} rows={noRows} />, iframeDocument.body)
+    createPortal(
+      <DataGrid columns={rowColumns} rows={manyRows} style={{ blockSize: '100%' }} />,
+      iframeDocument.body
+    )
   );
 
   const grid = frame.getGrid();
   await expect.element(grid).toBeInTheDocument();
   expect(observeSpy).toHaveBeenCalledWith(grid.element());
 
-  const headerCells = grid.getHeaderCell();
+  // the rows are virtualized, so the number of rendered rows follows the grid's height
+  const gridElement = grid.element();
+  const getRowCount = () => gridElement.querySelectorAll('[role="row"]').length;
+  await expect.poll(getRowCount).toBeGreaterThan(1);
+  const initialRowCount = getRowCount();
 
-  await expect.element(headerCells).toHaveLength(5);
+  iframe.style.height = '600px';
 
-  iframe.style.width = '800px';
-
-  await expect.element(headerCells).toHaveLength(9);
+  await expect.poll(getRowCount).toBeGreaterThan(initialRowCount);
 });
 
 test('should navigate between cells with the keyboard', async () => {

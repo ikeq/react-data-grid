@@ -1,74 +1,16 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
-import { getViewportColumns, mapColumns, min } from '../utils';
+import { mapColumns } from '../utils';
 import type { CalculatedColumn, MapViewportColumns } from '../types';
 
-interface ViewportColumnsArgs<R> {
-  columns: readonly CalculatedColumn<R>[];
-  colOverscanStartIdx: number;
-  colOverscanEndIdx: number;
-  lastStartFrozenColumnIndex: number;
-  firstEndFrozenColumnIndex: number;
-}
-
-export function useViewportColumns<R>({
-  columns,
-  colOverscanStartIdx,
-  colOverscanEndIdx,
-  lastStartFrozenColumnIndex,
-  firstEndFrozenColumnIndex
-}: ViewportColumnsArgs<R>) {
-  // Effective inclusive upper bound for overscan in the unfrozen band.
-  // When end-frozen columns exist, the unfrozen band ends just before them.
-  const effectiveOverscanEndIdx =
-    firstEndFrozenColumnIndex > -1
-      ? min(colOverscanEndIdx, firstEndFrozenColumnIndex - 1)
-      : colOverscanEndIdx;
-
-  // the columns of the rows without an active cell, shared by all of them
-  const viewportColumns = useMemo((): readonly CalculatedColumn<R>[] => {
-    return getViewportColumns(
-      columns,
-      lastStartFrozenColumnIndex,
-      firstEndFrozenColumnIndex,
-      colOverscanStartIdx,
-      effectiveOverscanEndIdx,
-      -1
-    );
-  }, [
-    columns,
-    lastStartFrozenColumnIndex,
-    firstEndFrozenColumnIndex,
-    colOverscanStartIdx,
-    effectiveOverscanEndIdx
-  ]);
-
+// columns are not virtualized: every row renders all the columns
+export function useViewportColumns<R>(columns: readonly CalculatedColumn<R>[]) {
   const mapViewportColumns = useCallback<MapViewportColumns<R>>(
-    (activeColumnIdx = -1, callback) => {
-      const rowColumns =
-        activeColumnIdx === -1
-          ? viewportColumns
-          : getViewportColumns(
-              columns,
-              lastStartFrozenColumnIndex,
-              firstEndFrozenColumnIndex,
-              colOverscanStartIdx,
-              effectiveOverscanEndIdx,
-              activeColumnIdx
-            );
-
-      return mapColumns(rowColumns, activeColumnIdx, callback);
-    },
-    [
-      viewportColumns,
-      columns,
-      lastStartFrozenColumnIndex,
-      firstEndFrozenColumnIndex,
-      colOverscanStartIdx,
-      effectiveOverscanEndIdx
-    ]
+    (activeColumnIdx = -1, callback) => mapColumns(columns, activeColumnIdx, callback),
+    [columns]
   );
 
+  // the rows outside of the viewport that are rendered for the active cell only render its column
   const mapViewportColumnsOutsideOfViewport = useCallback<MapViewportColumns<R>>(
     (activeColumnIdx = -1, callback) => {
       if (activeColumnIdx < 0 || activeColumnIdx >= columns.length) return [];
@@ -78,7 +20,6 @@ export function useViewportColumns<R>({
   );
 
   return {
-    viewportColumns,
     mapViewportColumns,
     mapViewportColumnsOutsideOfViewport
   } as const;

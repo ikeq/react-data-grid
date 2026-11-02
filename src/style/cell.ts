@@ -10,7 +10,7 @@ export const cell = css`
      */
     position: relative; /* needed for absolute positioning to work */
     padding-block: 0;
-    padding-inline: 8px;
+    padding-inline: 12px;
     align-content: center;
     background-color: inherit;
 
@@ -61,12 +61,7 @@ export const cellFrozenBase = css`
 // a line between the frozen columns and the scrolling columns, like the line between the header and the data area
 const cellFrozenEdge = css`
   @layer rdg.Cell {
-    &.rdg-cell-frozen-start:nth-last-child(1 of .rdg-cell-frozen-start):not(
-        .rdg-row-header-corner-cell
-      ) {
-      border-inline-end: var(--rdg-border-width) solid var(--rdg-border-color);
-    }
-
+    border-inline-end: var(--rdg-border-width) solid var(--rdg-border-color);
     &.rdg-cell-frozen-end:nth-child(1 of .rdg-cell-frozen-end) {
       border-inline-start: var(--rdg-border-width) solid var(--rdg-border-color);
     }
@@ -141,7 +136,7 @@ const rowHeaderCell = css`
   @layer rdg.Cell {
     background-color: var(--rdg-header-background-color);
     color: var(--rdg-header-color);
-    text-align: end;
+    text-align: center;
     cursor: default;
     user-select: none;
   }

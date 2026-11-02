@@ -12,7 +12,7 @@ import type {
 } from './types';
 import type { DataGridProps } from './DataGrid';
 import HeaderCell from './HeaderCell';
-import { cell, cellFrozenBase, rowHeaderCornerCellClassname } from './style/cell';
+import { cell, cellFrozenBase } from './style/cell';
 
 type SharedDataGridProps<R, K extends React.Key> = Pick<
   DataGridProps<R, K>,
@@ -49,14 +49,7 @@ const headerRow = css`
       /* Should have a higher value than 1 to show up above regular cells and the focus sink */
       z-index: 2;
       position: sticky;
-
-      /*
-       * The line between the header and the data area.
-       * It is drawn on the header cells, which are sticky, so it stays when the rows scroll under them.
-       */
-      &:not(.${rowHeaderCornerCellClassname}) {
-        border-block-end: var(--rdg-border-width) solid var(--rdg-border-color);
-      }
+      border-block-end: var(--rdg-border-width) solid var(--rdg-border-color);
     }
 
     & > .${cellFrozenBase} {

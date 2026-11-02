@@ -1,49 +1,38 @@
 import { useCallback, useSyncExternalStore } from 'react';
 
-import { abs } from '../utils';
-
-interface ScrollState {
-  readonly scrollTop: number;
-  readonly scrollLeft: number;
-}
-
-const initialScrollState: ScrollState = {
-  scrollTop: 0,
-  scrollLeft: 0
-};
+// only the vertical scroll position is tracked: columns are not virtualized,
+// so scrolling horizontally doesn't render the grid again
+const initialScrollTop = 0;
 
 function getServerSnapshot() {
-  return initialScrollState;
+  return initialScrollTop;
 }
 
-const scrollStateMap = new WeakMap<React.RefObject<HTMLDivElement | null>, ScrollState>();
+const scrollTopMap = new WeakMap<React.RefObject<HTMLDivElement | null>, number>();
 
-export function useScrollState(gridRef: React.RefObject<HTMLDivElement | null>): ScrollState {
+export function useScrollTop(gridRef: React.RefObject<HTMLDivElement | null>): number {
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
       if (gridRef.current === null) return () => {};
 
       const el = gridRef.current;
 
-      // prime the scroll state map with the initial values
-      setScrollState();
+      // prime the scroll state map with the initial value
+      setScrollTop();
 
-      function setScrollState() {
+      function setScrollTop() {
         const { scrollTop } = el;
-        // scrollLeft is negative when direction is rtl
-        const scrollLeft = abs(el.scrollLeft);
-
-        const prev = scrollStateMap.get(gridRef) ?? initialScrollState;
-        if (prev.scrollTop === scrollTop && prev.scrollLeft === scrollLeft) {
+        const prev = scrollTopMap.get(gridRef) ?? initialScrollTop;
+        if (prev === scrollTop) {
           return false;
         }
 
-        scrollStateMap.set(gridRef, { scrollTop, scrollLeft });
+        scrollTopMap.set(gridRef, scrollTop);
         return true;
       }
 
       function onScroll() {
-        if (setScrollState()) {
+        if (setScrollTop()) {
           onStoreChange();
         }
       }
@@ -55,11 +44,11 @@ export function useScrollState(gridRef: React.RefObject<HTMLDivElement | null>):
     [gridRef]
   );
 
-  const getSnapshot = useCallback((): ScrollState => {
+  const getSnapshot = useCallback((): number => {
     // gridRef.current is null during the initial render, when suspending, or in <Activity mode="hidden">.
     // To avoid returning a different state in those cases,
     // we key the ref object instead of the element itself.
-    return scrollStateMap.get(gridRef) ?? initialScrollState;
+    return scrollTopMap.get(gridRef) ?? initialScrollTop;
   }, [gridRef]);
 
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);

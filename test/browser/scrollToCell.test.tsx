@@ -122,14 +122,23 @@ test('scrollToCell with end-frozen columns', async () => {
   await validateCellVisibility('40×0', true);
 });
 
+// the rows are virtualized, the columns are all rendered:
+// a cell is visible when it is rendered and inside the scrolled area of the grid
+function isCellInGridViewport(name: string) {
+  const cell = page.getCell({ name }).query();
+  if (cell === null) return false;
+  const grid = page.getGrid().element().getBoundingClientRect();
+  const rect = cell.getBoundingClientRect();
+  return (
+    rect.right > grid.left &&
+    rect.left < grid.right &&
+    rect.bottom > grid.top &&
+    rect.top < grid.bottom
+  );
+}
+
 function validateCellVisibility(name: string, isVisible: boolean) {
-  const cell = page.getCell({ name });
-
-  if (isVisible) {
-    return expect.element(cell).toBeVisible();
-  }
-
-  return expect.element(cell).not.toBeInTheDocument();
+  return expect.poll(() => isCellInGridViewport(name)).toBe(isVisible);
 }
 
 // `scrollToCell` renders asynchronously, so wait before checking that the grid did not scroll

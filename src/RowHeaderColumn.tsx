@@ -12,8 +12,8 @@ import { rowHeaderCellClassname } from './style/cell';
 export const RowHeaderColumn: Column<any> = {
   key: ROW_HEADER_COLUMN_KEY,
   name: '',
-  width: 50,
-  minWidth: 40,
+  width: 'max-content',
+  minWidth: 0,
   resizable: false,
   sortable: false,
   frozen: true,

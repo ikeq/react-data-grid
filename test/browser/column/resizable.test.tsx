@@ -246,65 +246,34 @@ test('should use the minWidth if specified on auto resize', async () => {
   await expect.element(grid).toHaveStyle({ gridTemplateColumns: '100px 100px' });
 });
 
-test('should remeasure flex columns when resizing a column', async () => {
-  const onColumnResize = vi.fn();
+test('string widths are left to CSS grid, and only resized columns get a width in pixels', async () => {
+  const onColumnWidthsChange = vi.fn();
   await setup<{
     readonly col1: string;
     readonly col2: string;
     readonly col3: string;
   }>({
     columns: [
-      {
-        key: 'col1',
-        name: 'col1',
-        resizable: true
-      },
-      {
-        key: 'col2',
-        name: 'col2',
-        resizable: true
-      },
-      {
-        key: 'col3',
-        name: 'col3',
-        resizable: true
-      }
+      { key: 'col1', name: 'col1', width: '1fr', resizable: true },
+      { key: 'col2', name: 'col2', width: '1fr', resizable: true },
+      { key: 'col3', name: 'col3', width: '1fr', resizable: true }
     ],
-    rows: [
-      {
-        col1: 'a'.repeat(10),
-        col2: 'a'.repeat(10),
-        col3: 'a'.repeat(10)
-      }
-    ],
-    onColumnResize,
-    style: measuredFontStyle
+    rows: [{ col1: 'a', col2: 'b', col3: 'c' }],
+    onColumnWidthsChange
   });
 
-  await testGridTemplateColumns({
-    chrome: '640px 640px 640px',
-    firefox: '640px 640px 640px',
-    webkit: '640px 640px 640px'
-  });
-  await autoResize('col1');
-  await testGridTemplateColumns({
-    chrome: '78.1406px 920.922px 920.938px',
-    firefox: '78.1667px 920.917px 920.917px',
-    firefoxCI: '99.5px 910.25px 910.25px',
-    webkit: '78.140625px 920.921875px 920.921875px',
-    webkitCI: '101.796875px 909.09375px 909.09375px'
-  });
-  expect(onColumnResize).toHaveBeenCalledOnce();
-  // onColumnResize is not called if width is not changed
-  await autoResize('col1');
-  await testGridTemplateColumns({
-    chrome: '78.1406px 920.922px 920.938px',
-    firefox: '78.1667px 920.917px 920.917px',
-    firefoxCI: '99.5px 910.25px 910.25px',
-    webkit: '78.140625px 920.921875px 920.921875px',
-    webkitCI: '101.796875px 909.09375px 909.09375px'
-  });
-  expect(onColumnResize).toHaveBeenCalledOnce();
+  // the columns are not measured
+  await expect.poll(() => grid.element().style.gridTemplateColumns).toBe('1fr 1fr 1fr');
+  expect(onColumnWidthsChange).not.toHaveBeenCalled();
+
+  await resize('col1', -100);
+  await expect
+    .poll(() => grid.element().style.gridTemplateColumns)
+    .toMatch(/^\d+(\.\d+)?px 1fr 1fr$/);
+  expect(onColumnWidthsChange).toHaveBeenCalledOnce();
+  const [columnWidths] = onColumnWidthsChange.mock.calls[0] as [ColumnWidths];
+  expect([...columnWidths.keys()]).toStrictEqual(['col1']);
+  expect(columnWidths.get('col1')?.type).toBe('resized');
 });
 
 test('should use columnWidths and onColumnWidthsChange props when provided', async () => {
@@ -315,8 +284,8 @@ test('should use columnWidths and onColumnWidthsChange props when provided', asy
     const [columnWidths, setColumnWidths] = useState(
       (): ColumnWidths =>
         new Map<string, ColumnWidth>([
-          ['col1', { width: 101, type: 'measured' }],
-          ['col2', { width: 201, type: 'measured' }]
+          ['col1', { width: 101, type: 'resized' }],
+          ['col2', { width: 201, type: 'resized' }]
         ])
     );
 
@@ -328,8 +297,8 @@ test('should use columnWidths and onColumnWidthsChange props when provided', asy
     function changedColumnWidths() {
       setColumnWidths(
         new Map<string, ColumnWidth>([
-          ['col1', { width: 120, type: 'measured' }],
-          ['col2', { width: 120, type: 'measured' }]
+          ['col1', { width: 120, type: 'resized' }],
+          ['col2', { width: 120, type: 'resized' }]
         ])
       );
     }
@@ -356,7 +325,7 @@ test('should use columnWidths and onColumnWidthsChange props when provided', asy
   await autoResize('col2');
   expect(onColumnWidthsChangeSpy).toHaveBeenCalledExactlyOnceWith(
     new Map([
-      ['col1', { width: 101, type: 'measured' }],
+      ['col1', { width: 101, type: 'resized' }],
       ['col2', { width: 100, type: 'resized' }]
     ])
   );
@@ -370,7 +339,7 @@ test('should use columnWidths and onColumnWidthsChange props when provided', asy
   await resize('col2', [5, 5, 5]);
   expect(onColumnWidthsChangeSpy).toHaveBeenCalledExactlyOnceWith(
     new Map([
-      ['col1', { width: 101, type: 'measured' }],
+      ['col1', { width: 101, type: 'resized' }],
       ['col2', { width: 115, type: 'resized' }]
     ])
   );
@@ -388,7 +357,7 @@ test('should use columnWidths and onColumnWidthsChange props when provided', asy
   await resize('col2', [5, 5]);
   expect(onColumnWidthsChangeSpy).toHaveBeenCalledExactlyOnceWith(
     new Map([
-      ['col1', { width: 120, type: 'measured' }],
+      ['col1', { width: 120, type: 'resized' }],
       ['col2', { width: 130, type: 'resized' }]
     ])
   );

@@ -266,8 +266,8 @@ export interface SetActivePositionOptions {
 }
 
 export interface ColumnWidth {
-  /** `'resized'` if the user resized the column, or `'measured'` if the grid measured it */
-  readonly type: 'resized' | 'measured';
+  /** the column was resized by the user */
+  readonly type: 'resized';
   /** The width in pixels */
   readonly width: number;
 }

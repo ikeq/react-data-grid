@@ -1,4 +1,4 @@
-import { useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { useCallback, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import type { Key, KeyboardEvent } from 'react';
 
 import {
@@ -8,7 +8,7 @@ import {
   useColumnWidths,
   useGridDimensions,
   useLatestFunc,
-  useScrollState,
+  useScrollTop,
   useScrollToPosition,
   useViewportColumns,
   useViewportRows,
@@ -158,7 +158,10 @@ export interface DataGridProps<R, K extends Key = Key> extends SharedDivProps {
   /**
    * Toggles and modes
    */
-  /** @default true */
+  /**
+   * Only render the rows in the viewport. The columns are always all rendered
+   * @default true
+   */
   enableVirtualization?: Maybe<boolean>;
 
   /**
@@ -244,12 +247,15 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
   /**
    * states
    */
-  const { scrollTop, scrollLeft } = useScrollState(gridRef);
-  const [gridWidth, gridHeight] = useGridDimensions(gridRef);
+  const scrollTop = useScrollTop(gridRef);
+  const [, gridHeight] = useGridDimensions(gridRef);
   const [columnWidthsInternal, setColumnWidthsInternal] = useState(
     (): ColumnWidths => columnWidthsRaw ?? new Map()
   );
   const [isColumnResizing, setIsColumnResizing] = useState(false);
+  const [renderedFrozenColumnWidths, setRenderedFrozenColumnWidths] = useState(
+    (): ReadonlyMap<string, number> => new Map()
+  );
 
   const isColumnWidthsControlled =
     columnWidthsRaw != null && onColumnWidthsChangeRaw != null && !isColumnResizing;
@@ -273,8 +279,6 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
     columns,
     lastStartFrozenColumnIndex,
     firstEndFrozenColumnIndex,
-    colOverscanStartIdx,
-    colOverscanEndIdx,
     templateColumns,
     layoutCssVars,
     totalStartFrozenColumnWidth,
@@ -283,10 +287,33 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
     rawColumns,
     defaultColumnOptions,
     getColumnWidth,
-    scrollLeft,
-    viewportWidth: gridWidth,
-    enableVirtualization
+    renderedFrozenColumnWidths
   });
+
+  // CSS grid sizes the columns with string widths, so the frozen ones are read after each render,
+  // for the offsets of the frozen columns next to them. Their width can change when other rows are rendered.
+  useLayoutEffect(updateRenderedFrozenColumnWidths);
+
+  function updateRenderedFrozenColumnWidths() {
+    const grid = gridRef.current;
+    if (grid === null) return;
+    const widths = new Map<string, number>();
+    for (const column of columns) {
+      if (column.frozen === false || typeof getColumnWidth(column) === 'number') continue;
+      const measuringCell = grid.querySelector(
+        `[data-measuring-cell-key="${CSS.escape(column.key)}"]`
+      );
+      if (measuringCell !== null) {
+        widths.set(column.key, measuringCell.getBoundingClientRect().width);
+      }
+    }
+    if (
+      widths.size !== renderedFrozenColumnWidths.size ||
+      [...widths].some(([key, width]) => renderedFrozenColumnWidths.get(key) !== width)
+    ) {
+      setRenderedFrozenColumnWidths(widths);
+    }
+  }
 
   /**
    * computed values
@@ -356,21 +383,12 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
     findRowIdx
   });
 
-  const { viewportColumns, mapViewportColumns, mapViewportColumnsOutsideOfViewport } =
-    useViewportColumns({
-      columns,
-      colOverscanStartIdx,
-      colOverscanEndIdx,
-      lastStartFrozenColumnIndex,
-      firstEndFrozenColumnIndex
-    });
+  const { mapViewportColumns, mapViewportColumnsOutsideOfViewport } = useViewportColumns(columns);
 
   const { gridTemplateColumns, handleColumnResize } = useColumnWidths(
     columns,
-    viewportColumns,
     templateColumns,
     gridRef,
-    gridWidth,
     columnWidths,
     onColumnWidthsChange,
     onColumnResize,
@@ -736,7 +754,7 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
       {rows.length === 0 && noRowsFallback ? noRowsFallback : getViewportRows()}
 
       {/* render empty cells so we can measure column widths */}
-      {renderMeasuringCells(viewportColumns)}
+      {renderMeasuringCells(columns)}
 
       {scrollToPositionElement}
     </div>

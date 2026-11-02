@@ -6,7 +6,7 @@ It is a fork of [react-data-grid](https://github.com/Comcast/react-data-grid), t
 
 ## Features
 
-- Virtualization: rows and columns outside the viewport are not rendered, so large tables stay fast
+- Row virtualization: rows outside the viewport are not rendered, so long tables stay fast. All the columns are rendered
 - Spreadsheet-like cell selection: drag to select a range, Shift to extend it, Ctrl/Cmd to add ranges, select whole rows and columns, and Ctrl/Cmd + C to copy
 - Row numbers with `RowHeaderColumn`
 - Frozen columns, at the start or the end
@@ -202,6 +202,14 @@ function App() {
 
 The default header cell content shows the column name and its sort status, without a control to sort it.
 
+### Column Widths
+
+The grid doesn't measure columns: string widths are left to CSS grid, and only the columns resized by the user get a width in pixels, in `columnWidths`.
+
+Columns are not virtualized, so CSS grid can size all of them. `max-content` is computed from the rendered rows, so such columns can get wider while scrolling.
+
+The rendered widths of frozen columns are read after each render, for the offsets of the frozen columns next to them.
+
 ## Keyboard Shortcuts
 
 | Keys                                       | Action                                                           |
@@ -288,8 +296,8 @@ The styles are not in cascade layers, so your rules override them when their sel
 | `ref`                        | `React.Ref<DataGridHandle>`                                                | See [`DataGridHandle`](#datagridhandle)                                                                    |
 | `rowHeight`                  | `number \| ((row: R) => number)`                                           | Row height in pixels, `30` by default                                                                      |
 | `headerRowHeight`            | `number`                                                                   | Header row height in pixels, `32` by default                                                               |
-| `columnWidths`               | `ColumnWidths`                                                             | The widths of the resized and measured columns, to control them                                            |
-| `onColumnWidthsChange`       | `(columnWidths: ColumnWidths) => void`                                     | Called when columns are measured, and when a resize ends                                                   |
+| `columnWidths`               | `ColumnWidths`                                                             | The widths of the columns resized by the user, to control them                                             |
+| `onColumnWidthsChange`       | `(columnWidths: ColumnWidths) => void`                                     | Called when a resize ends                                                                                  |
 | `onColumnResize`             | `(column: CalculatedColumn<R>, width: number) => void`                     | Called while a column is resized                                                                           |
 | `sortColumns`                | `readonly SortColumn[]`                                                    | The sorted columns                                                                                         |
 | `onSortColumnsChange`        | `(sortColumns: SortColumn[]) => void`                                      | Called by `onSort`                                                                                         |
@@ -302,7 +310,7 @@ The styles are not in cascade layers, so your rules override them when their sel
 | `onCellKeyDown`              | `(args: CellKeyDownArgs<R>, event: CellKeyboardEvent) => void`             | Called when a key is pressed in a cell, call `event.preventGridDefault()` to skip the navigation           |
 | `onActivePositionChange`     | `(args: PositionChangeArgs<R>) => void`                                    | Called when the active cell changes                                                                        |
 | `onScroll`                   | `React.UIEventHandler<HTMLDivElement>`                                     | Called when the grid scrolls, to load more rows for example                                                |
-| `enableVirtualization`       | `boolean`                                                                  | `true` by default                                                                                          |
+| `enableVirtualization`       | `boolean`                                                                  | Only render the rows in the viewport, `true` by default. The columns are always all rendered               |
 | `renderers`                  | `{ noRowsFallback?: ReactNode }`                                           | Rendered instead of the rows when there are none                                                           |
 | `rowClass`                   | `(row: R, rowIdx: number) => string \| undefined`                          | Class names of rows                                                                                        |
 | `headerRowClass`             | `string`                                                                   | Class names of the header row                                                                              |
@@ -324,21 +332,21 @@ The styles are not in cascade layers, so your rules override them when their sel
 
 ### `Column<R>`
 
-| Property              | Type                                                    | Description                                                                           |
-| --------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `key`                 | `string`                                                | A unique key, also the property of the row that the default cell content shows        |
-| `name`                | `string \| ReactElement`                                | Shown in the header cell by default                                                   |
-| `width`               | `number \| string`                                      | Pixels, or a CSS grid track size like `'1fr'` or `'max-content'`, `'auto'` by default |
-| `minWidth`            | `number`                                                | `50` by default                                                                       |
-| `maxWidth`            | `number`                                                |                                                                                       |
-| `frozen`              | `boolean \| 'start' \| 'end'`                           | Keeps the column visible at the start or end edge, `true` is `'start'`                |
-| `resizable`           | `boolean`                                               | Shows a resize handle, a double click auto-sizes the column                           |
-| `sortable`            | `boolean`                                               | Enables `onSort`                                                                      |
-| `sortDescendingFirst` | `boolean`                                               | Sorts descending first                                                                |
-| `renderCell`          | `(props: RenderCellContentProps<R>) => ReactNode`       | Cell content, `row[key]` by default                                                   |
-| `renderHeaderCell`    | `(props: RenderHeaderCellContentProps<R>) => ReactNode` | Header cell content                                                                   |
-| `cellClass`           | `string \| ((row: R) => string \| undefined)`           | Class names of cells                                                                  |
-| `headerCellClass`     | `string`                                                | Class names of the header cell                                                        |
+| Property              | Type                                                    | Description                                                                    |
+| --------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `key`                 | `string`                                                | A unique key, also the property of the row that the default cell content shows |
+| `name`                | `string \| ReactElement`                                | Shown in the header cell by default                                            |
+| `width`               | `number \| string`                                      | Pixels, or a CSS grid track size like `'1fr'`, `'max-content'` by default      |
+| `minWidth`            | `number`                                                | `50` by default                                                                |
+| `maxWidth`            | `number`                                                |                                                                                |
+| `frozen`              | `boolean \| 'start' \| 'end'`                           | Keeps the column visible at the start or end edge, `true` is `'start'`         |
+| `resizable`           | `boolean`                                               | Shows a resize handle, a double click auto-sizes the column                    |
+| `sortable`            | `boolean`                                               | Enables `onSort`                                                               |
+| `sortDescendingFirst` | `boolean`                                               | Sorts descending first                                                         |
+| `renderCell`          | `(props: RenderCellContentProps<R>) => ReactNode`       | Cell content, `row[key]` by default                                            |
+| `renderHeaderCell`    | `(props: RenderHeaderCellContentProps<R>) => ReactNode` | Header cell content                                                            |
+| `cellClass`           | `string \| ((row: R) => string \| undefined)`           | Class names of cells                                                           |
+| `headerCellClass`     | `string`                                                | Class names of the header cell                                                 |
 
 `RenderCellContentProps<R>` is `{ column, row, rowIdx, tabIndex }`.
 

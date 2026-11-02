@@ -4,133 +4,61 @@ import { flushSync } from 'react-dom';
 import type { CalculatedColumn, ColumnWidths, ResizedWidth } from '../types';
 import type { DataGridProps } from '../DataGrid';
 
+/**
+ * The grid doesn't measure columns: string widths, like `'auto'` or `'minmax(0, max-content)'`,
+ * are left to CSS grid. Only the columns resized by the user get a width in pixels.
+ */
 export function useColumnWidths<R>(
   columns: readonly CalculatedColumn<R>[],
-  viewportColumns: readonly CalculatedColumn<R>[],
   templateColumns: readonly string[],
   gridRef: React.RefObject<HTMLDivElement | null>,
-  gridWidth: number,
   columnWidths: ColumnWidths,
   onColumnWidthsChange: (columnWidths: ColumnWidths) => void,
   onColumnResize: DataGridProps<R>['onColumnResize'],
   setColumnResizing: (isColumnResizing: boolean) => void
 ) {
-  const [columnToAutoResize, setColumnToAutoResize] = useState<{
+  const [columnToResize, setColumnToResize] = useState<{
     readonly key: string;
     readonly width: ResizedWidth;
   } | null>(null);
-  const [columnsToMeasureOnResize, setColumnsToMeasureOnResize] =
-    useState<ReadonlySet<string> | null>(null);
-  const [prevGridWidth, setPrevGridWidth] = useState(gridWidth);
-  const columnsCanFlex: boolean = columns.length === viewportColumns.length;
-  const ignorePreviouslyMeasuredColumnsOnGridWidthChange =
-    // Allow columns to flex again when...
-    columnsCanFlex &&
-    // there is enough space for columns to flex and the grid was resized
-    gridWidth !== prevGridWidth;
   const newTemplateColumns = [...templateColumns];
-  const columnsToMeasure: string[] = [];
 
-  for (const { key, idx, width } of viewportColumns) {
-    const columnWidth = columnWidths.get(key);
-    if (key === columnToAutoResize?.key) {
-      newTemplateColumns[idx] =
-        columnToAutoResize.width === 'max-content'
-          ? columnToAutoResize.width
-          : `${columnToAutoResize.width}px`;
-      columnsToMeasure.push(key);
-    } else if (
-      typeof width === 'string' &&
-      // If the column is resized by the user, we don't want to measure it again
-      columnWidth?.type !== 'resized' &&
-      (ignorePreviouslyMeasuredColumnsOnGridWidthChange ||
-        columnsToMeasureOnResize?.has(key) === true ||
-        columnWidth === undefined)
-    ) {
-      newTemplateColumns[idx] = width;
-      columnsToMeasure.push(key);
+  if (columnToResize !== null) {
+    const column = columns.find(({ key }) => key === columnToResize.key);
+    if (column !== undefined) {
+      newTemplateColumns[column.idx] =
+        columnToResize.width === 'max-content' ? 'max-content' : `${columnToResize.width}px`;
     }
   }
 
   const gridTemplateColumns = newTemplateColumns.join(' ');
 
-  useLayoutEffect(updateMeasuredAndResizedWidths);
+  useLayoutEffect(updateResizedWidth);
 
-  function updateMeasuredAndResizedWidths() {
-    // React renders the grid again for a state update in a layout effect, even when the value is the same
-    if (prevGridWidth !== gridWidth) {
-      setPrevGridWidth(gridWidth);
-    }
-    if (columnsToMeasure.length === 0) return;
+  // the resized width is read from the rendered column, so `max-content` and the min and max widths are applied
+  function updateResizedWidth() {
+    if (columnToResize === null) return;
+    const { key } = columnToResize;
+    setColumnToResize(null);
 
-    const newColumnWidths = new Map(columnWidths);
-    let hasChanges = false;
+    const width = getRenderedColumnWidth(gridRef, key);
+    if (width === undefined || width === columnWidths.get(key)?.width) return;
 
-    for (const key of columnsToMeasure) {
-      const measuredWidth = measureColumnWidth(gridRef, key);
-      if (measuredWidth !== columnWidths.get(key)?.width) {
-        hasChanges = true;
-      }
-      if (measuredWidth === undefined) {
-        newColumnWidths.delete(key);
-      } else {
-        newColumnWidths.set(key, { type: 'measured', width: measuredWidth });
-      }
-    }
-
-    if (columnToAutoResize !== null) {
-      const resizingKey = columnToAutoResize.key;
-      const oldWidth = columnWidths.get(resizingKey)?.width;
-      const newWidth = measureColumnWidth(gridRef, resizingKey);
-      if (newWidth !== undefined && oldWidth !== newWidth) {
-        hasChanges = true;
-        newColumnWidths.set(resizingKey, {
-          type: 'resized',
-          width: newWidth
-        });
-      }
-      setColumnToAutoResize(null);
-    }
-
-    if (hasChanges) {
-      onColumnWidthsChange(newColumnWidths);
-    }
+    onColumnWidthsChange(new Map([...columnWidths, [key, { type: 'resized', width }]]));
   }
 
   function handleColumnResize(column: CalculatedColumn<R>, nextWidth: ResizedWidth) {
-    const { key: resizingKey } = column;
+    const { key } = column;
 
     flushSync(() => {
-      if (columnsCanFlex) {
-        // remeasure all the columns that can flex and are not resized by the user
-        const columnsToRemeasure = new Set<string>();
-        for (const { key, width } of viewportColumns) {
-          if (
-            resizingKey !== key &&
-            typeof width === 'string' &&
-            columnWidths.get(key)?.type !== 'resized'
-          ) {
-            columnsToRemeasure.add(key);
-          }
-        }
-
-        setColumnsToMeasureOnResize(columnsToRemeasure);
-      }
-
-      setColumnToAutoResize({
-        key: resizingKey,
-        width: nextWidth
-      });
-
+      setColumnToResize({ key, width: nextWidth });
       setColumnResizing(typeof nextWidth === 'number');
     });
 
-    setColumnsToMeasureOnResize(null);
-
     if (onColumnResize) {
-      const previousWidth = columnWidths.get(resizingKey)?.width;
+      const previousWidth = columnWidths.get(key)?.width;
       const newWidth =
-        typeof nextWidth === 'number' ? nextWidth : measureColumnWidth(gridRef, resizingKey);
+        typeof nextWidth === 'number' ? nextWidth : getRenderedColumnWidth(gridRef, key);
       if (newWidth !== undefined && newWidth !== previousWidth) {
         onColumnResize(column, newWidth);
       }
@@ -143,7 +71,7 @@ export function useColumnWidths<R>(
   } as const;
 }
 
-function measureColumnWidth(gridRef: React.RefObject<HTMLDivElement | null>, key: string) {
+function getRenderedColumnWidth(gridRef: React.RefObject<HTMLDivElement | null>, key: string) {
   const selector = `[data-measuring-cell-key="${CSS.escape(key)}"]`;
   const measuringCell = gridRef.current?.querySelector(selector);
   return measuringCell?.getBoundingClientRect().width;
