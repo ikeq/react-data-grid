@@ -13,7 +13,7 @@ import {
 } from './utils';
 import type { CalculatedColumn, SortColumn, SortEvent } from './types';
 import type { HeaderRowProps } from './HeaderRow';
-import { headerCellRangeSelectedClassname, rowHeaderCornerCellClassnames } from './style/cell';
+import { headerCellRangeSelectedClassname, rowHeaderCornerCellClassname } from './style/cell';
 
 const cellResizable = css`
   @layer rdg.HeaderCell {
@@ -83,7 +83,7 @@ export default function HeaderCell<R>({
 
   const className = getCellClassname(
     column,
-    column.key === ROW_HEADER_COLUMN_KEY && rowHeaderCornerCellClassnames,
+    column.key === ROW_HEADER_COLUMN_KEY && rowHeaderCornerCellClassname,
     column.headerCellClass,
     resizable && cellResizableClassname,
     isColumnSelected && headerCellRangeSelectedClassname

@@ -14,24 +14,20 @@ const columns: readonly Column<Row>[] = [
 
 const rows: readonly Row[] = [{ id: 1 }, { id: 2 }];
 
-test('the top-left cell has no lines', async () => {
+test('the top-left cell has the header line and the frozen column line', async () => {
   await page.render(
     <DataGrid columns={[RowHeaderColumn, { key: 'id', name: 'ID' }]} rows={rows} />
   );
   const [corner, idHeaderCell] = page.getHeaderRow().getByRole('columnheader').elements();
   const cornerStyle = getComputedStyle(corner);
-  expect(cornerStyle.borderBlockEndWidth).toBe('0px');
-  expect(cornerStyle.borderInlineEndWidth).toBe('0px');
-  // a 1px dot in its end bottom corner joins the header line and the frozen column line
-  const dot = getComputedStyle(corner, '::after');
-  expect(dot.width).toBe('1px');
-  expect(dot.height).toBe('1px');
-  expect(dot.backgroundColor).toBe(getComputedStyle(idHeaderCell).borderBlockEndColor);
+  expect(cornerStyle.borderBlockEndWidth).toBe('1px');
+  expect(cornerStyle.borderInlineEndWidth).toBe('1px');
+  // the lines meet at the end bottom corner of the top-left cell
+  expect(getComputedStyle(corner, '::after').content).toBe('none');
   const cornerRect = corner.getBoundingClientRect();
   const lineRect = idHeaderCell.getBoundingClientRect();
   expect(cornerRect.right).toBe(lineRect.left);
   expect(cornerRect.bottom).toBe(lineRect.bottom);
-  // the header line starts after it, and the frozen column line below it
   expect(getComputedStyle(idHeaderCell).borderBlockEndWidth).toBe('1px');
   const rowHeaderCell = page.getRow().nth(1).getByRole('gridcell').first().element();
   expect(getComputedStyle(rowHeaderCell).borderInlineEndWidth).toBe('1px');
@@ -59,7 +55,7 @@ test('rows are striped, starting with the first row', async () => {
   expect(getComputedStyle(row3).backgroundColor).toBe(stripe);
 });
 
-test('frozen columns have a single line at their edge, and no shadow', async () => {
+test('every frozen cell has a line on its side facing the scrolling columns, and no shadow', async () => {
   const frozenColumns: readonly Column<Row>[] = [
     { key: 's1', name: 'S1', frozen: 'start' },
     { key: 's2', name: 'S2', frozen: 'start' },
@@ -74,18 +70,21 @@ test('frozen columns have a single line at their edge, and no shadow', async () 
     return [style.borderInlineStartWidth, style.borderInlineEndWidth];
   }
 
-  expect(widths('S1')).toStrictEqual(['0px', '0px']);
+  expect(widths('S1')).toStrictEqual(['0px', '1px']);
   expect(widths('S2')).toStrictEqual(['0px', '1px']);
   expect(widths('C')).toStrictEqual(['0px', '0px']);
   expect(widths('E1')).toStrictEqual(['1px', '0px']);
-  expect(widths('E2')).toStrictEqual(['0px', '0px']);
+  expect(widths('E2')).toStrictEqual(['1px', '0px']);
 
   // the data cells have the same line
   const row = page.getRow().nth(1).element();
-  const [s1, s2, , e1] = row.querySelectorAll('[role="gridcell"]');
-  expect(getComputedStyle(s1).borderInlineEndWidth).toBe('0px');
+  const [s1, s2, , e1, e2] = row.querySelectorAll('[role="gridcell"]');
+  expect(getComputedStyle(s1).borderInlineEndWidth).toBe('1px');
   expect(getComputedStyle(s2).borderInlineEndWidth).toBe('1px');
   expect(getComputedStyle(e1).borderInlineStartWidth).toBe('1px');
+  expect(getComputedStyle(e2).borderInlineStartWidth).toBe('1px');
+  // the grid's outer edges have no line
+  expect(getComputedStyle(e2).borderInlineEndWidth).toBe('0px');
 
   expect(page.getGrid().element().querySelector('.rdg-frozen-column-shadow')).toBeNull();
 });

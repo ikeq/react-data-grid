@@ -58,40 +58,26 @@ export const cellFrozenBase = css`
   }
 `;
 
-// a line between the frozen columns and the scrolling columns, like the line between the header and the data area
-const cellFrozenEdge = css`
+// every frozen cell has a line on its side facing the scrolling columns,
+// so the frozen columns are separated from each other and from the scrolling columns
+const cellFrozenStartEdge = css`
   @layer rdg.Cell {
     border-inline-end: var(--rdg-border-width) solid var(--rdg-border-color);
-    &.rdg-cell-frozen-end:nth-child(1 of .rdg-cell-frozen-end) {
-      border-inline-start: var(--rdg-border-width) solid var(--rdg-border-color);
-    }
   }
 `;
 
-// the top-left cell, the header cell of `RowHeaderColumn`, has no lines, like the corner of a spreadsheet
+const cellFrozenEndEdge = css`
+  @layer rdg.Cell {
+    border-inline-start: var(--rdg-border-width) solid var(--rdg-border-color);
+  }
+`;
+
+// the top-left cell, the header cell of `RowHeaderColumn`.
+// It has the header line and the frozen column line, which meet at its end bottom corner
 export const rowHeaderCornerCellClassname = 'rdg-row-header-corner-cell';
 
-// The header line starts after the top-left cell, and the frozen column line starts below it,
-// so the pixel where they meet is drawn in the cell's end bottom corner, to join them
-const rowHeaderCornerCell = css`
-  @layer rdg.Cell {
-    &::after {
-      content: '';
-      position: absolute;
-      inset-block-end: 0;
-      inset-inline-end: 0;
-      inline-size: var(--rdg-border-width);
-      block-size: var(--rdg-border-width);
-      background-color: var(--rdg-border-color);
-      pointer-events: none;
-    }
-  }
-`;
-
-export const rowHeaderCornerCellClassnames = `${rowHeaderCornerCellClassname} ${rowHeaderCornerCell}`;
-
-export const cellFrozenStartClassname = `rdg-cell-frozen-start ${cellFrozenBase} ${cellFrozenEdge}`;
-export const cellFrozenEndClassname = `rdg-cell-frozen-end ${cellFrozenBase} ${cellFrozenEdge}`;
+export const cellFrozenStartClassname = `rdg-cell-frozen-start ${cellFrozenBase} ${cellFrozenStartEdge}`;
+export const cellFrozenEndClassname = `rdg-cell-frozen-end ${cellFrozenBase} ${cellFrozenEndEdge}`;
 
 const cellRangeSelected = css`
   @layer rdg.Cell {
