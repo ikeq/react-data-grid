@@ -163,7 +163,7 @@ function CellSelection() {
         rowKeyGetter={rowKeyGetter}
         columns={columns}
         rows={sortedRows}
-        defaultColumnOptions={{ sortable: true, renderHeaderCell: renderSortableHeaderCell }}
+        defaultColumnOptions={{ renderHeaderCell: renderSortableHeaderCell }}
         className="fill-grid"
         sortColumns={sortColumns}
         onSortColumnsChange={setSortColumns}

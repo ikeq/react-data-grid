@@ -66,7 +66,7 @@ describe('Custom cell content renderer', () => {
       columns: [
         { key: 'id', name: 'ID', renderCell },
         { name: 'Name', key: 'name', width: 100, cellClass: 'name', renderCell },
-        { key: 'other', name: 'Other', frozen: true, sortable: true, renderCell }
+        { key: 'other', name: 'Other', frozen: true, resizable: true, renderCell }
       ],
       rows: [{ id: 1 }]
     });

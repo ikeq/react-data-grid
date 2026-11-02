@@ -51,7 +51,7 @@ import { rootClassname } from './style/core';
 
 export type DefaultColumnOptions<R> = Pick<
   Column<R>,
-  'renderCell' | 'renderHeaderCell' | 'width' | 'minWidth' | 'maxWidth' | 'resizable' | 'sortable'
+  'renderCell' | 'renderHeaderCell' | 'width' | 'minWidth' | 'maxWidth' | 'resizable'
 >;
 
 export interface DataGridHandle {

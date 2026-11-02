@@ -37,7 +37,6 @@ export function useCalculatedColumns<R>({
   const defaultMaxWidth = defaultColumnOptions?.maxWidth ?? undefined;
   const defaultRenderCell = defaultColumnOptions?.renderCell ?? renderValue;
   const defaultRenderHeaderCell = defaultColumnOptions?.renderHeaderCell ?? renderHeaderCell;
-  const defaultSortable = defaultColumnOptions?.sortable ?? false;
   const defaultResizable = defaultColumnOptions?.resizable ?? false;
 
   const { columns, lastStartFrozenColumnIndex, firstEndFrozenColumnIndex } = useMemo((): {
@@ -70,7 +69,6 @@ export function useCalculatedColumns<R>({
         renderHeaderCell: rawColumn.renderHeaderCell ?? defaultRenderHeaderCell,
         frozen,
         resizable: rawColumn.resizable ?? defaultResizable,
-        sortable: rawColumn.sortable ?? defaultSortable,
         sortDescendingFirst: rawColumn.sortDescendingFirst
       });
 
@@ -106,8 +104,7 @@ export function useCalculatedColumns<R>({
     defaultMaxWidth,
     defaultRenderCell,
     defaultRenderHeaderCell,
-    defaultResizable,
-    defaultSortable
+    defaultResizable
   ]);
 
   // the metrics are only used for the offsets of the frozen columns: all the columns are rendered

@@ -36,8 +36,6 @@ export interface Column<TRow> {
   readonly frozen?: Maybe<ColumnFrozen | true>;
   /** Enable resizing of the column */
   readonly resizable?: Maybe<boolean>;
-  /** Enable sorting of the column, with `onSort` passed to `renderHeaderCell` */
-  readonly sortable?: Maybe<boolean>;
   /** Sets the column sort order to be descending instead of ascending the first time the column is sorted */
   readonly sortDescendingFirst?: Maybe<boolean>;
 }
@@ -49,7 +47,6 @@ export interface CalculatedColumn<TRow> extends Column<TRow> {
   readonly minWidth: number;
   readonly maxWidth: number | undefined;
   readonly resizable: boolean;
-  readonly sortable: boolean;
   readonly frozen: ColumnFrozen;
   readonly renderCell: (props: RenderCellContentProps<TRow>) => ReactNode;
   readonly renderHeaderCell: (props: RenderHeaderCellContentProps<TRow>) => ReactNode;
@@ -134,7 +131,8 @@ export interface RenderHeaderCellContentProps<TRow> {
   tabIndex: number;
   /**
    * Sorts the column by calling `onSortColumnsChange`: ascending, then descending, then not sorted,
-   * or descending first with `sortDescendingFirst`. Does nothing if the column is not `sortable`.
+   * or descending first with `sortDescendingFirst`. Every column can be sorted:
+   * a column is only sorted when its header cell calls `onSort`.
    * Clicking the header cell selects the column, so render a control that sorts, like `<button onClick={onSort}>`.
    * With Ctrl/Cmd held, the column is added to the sorted columns instead of replacing them.
    */

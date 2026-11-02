@@ -7,7 +7,7 @@ const columns: readonly Column<never>[] = [
   { key: 'colA', name: 'colA' },
   { key: 'colB', name: 'colB', sortDescendingFirst: true },
   { key: 'colC', name: 'colC' },
-  { key: 'colD', name: 'colD', sortable: false }
+  { key: 'colD', name: 'colD' }
 ];
 
 function TestGrid() {
@@ -19,7 +19,6 @@ function TestGrid() {
         columns={columns}
         rows={[]}
         defaultColumnOptions={{
-          sortable: true,
           // clicking the header cell selects the column, so the columns are sorted with a button
           renderHeaderCell(props) {
             return (
@@ -57,13 +56,21 @@ function testSortColumns(expectedValue: readonly SortColumn[]) {
     .toHaveTextContent(JSON.stringify(expectedValue));
 }
 
-test('should not sort if sortable is false', async () => {
+test('every column can be sorted with onSort', async () => {
   await setup();
   const headerCell = page.getHeaderCell({ name: 'colD', exact: false });
-  const sortButton = getSortButton('colD');
-  await userEvent.click(sortButton);
-  await expect.element(headerCell).not.toHaveAttribute('aria-sort');
-  await testSortColumns([]);
+  await userEvent.click(getSortButton('colD'));
+  await expect.element(headerCell).toHaveAttribute('aria-sort', 'ascending');
+  await testSortColumns([{ columnKey: 'colD', direction: 'ASC' }]);
+});
+
+test('the default header cell content only shows the sort status of sorted columns', async () => {
+  await setup();
+  const headerCell = page.getHeaderCell({ name: 'colA', exact: false });
+  await expect.element(headerCell.getBySelector('.rdg-header-sort-name')).not.toBeInTheDocument();
+  await userEvent.click(getSortButton('colA'));
+  await expect.element(headerCell.getBySelector('.rdg-header-sort-name')).toHaveTextContent('colA');
+  await expect.element(headerCell.getBySelector('.rdg-sort-arrow')).toBeInTheDocument();
 });
 
 test('single column sort', async () => {

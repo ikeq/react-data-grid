@@ -155,7 +155,7 @@ const columns = [{ ...RowHeaderColumn, width: 60 }, ...otherColumns];
 
 The grid doesn't sort the rows: sort them yourself with `sortColumns`, and update it in `onSortColumnsChange`.
 
-Clicking a header cell selects its column, so the column is sorted by a control in the header cell that calls `onSort`. `onSort` cycles through ascending, descending, and not sorted, or starts with descending when `sortDescendingFirst` is set. With Ctrl/Cmd held, it adds the column to the sorted columns.
+Every column can be sorted: clicking a header cell selects its column, so a column is only sorted when a control in its header cell calls `onSort`. `onSort` cycles through ascending, descending, and not sorted, or starts with descending when `sortDescendingFirst` is set. With Ctrl/Cmd held, it adds the column to the sorted columns.
 
 ```tsx
 import {
@@ -171,8 +171,6 @@ function renderSortableHeaderCell<R>({
   tabIndex,
   onSort
 }: RenderHeaderCellContentProps<R>) {
-  if (!column.sortable) return column.name;
-
   return (
     <>
       {column.name}
@@ -192,7 +190,7 @@ function App() {
     <DataGrid
       columns={columns}
       rows={sortedRows}
-      defaultColumnOptions={{ sortable: true, renderHeaderCell: renderSortableHeaderCell }}
+      defaultColumnOptions={{ renderHeaderCell: renderSortableHeaderCell }}
       sortColumns={sortColumns}
       onSortColumnsChange={setSortColumns}
     />
@@ -288,34 +286,34 @@ The styles are not in cascade layers, so your rules override them when their sel
 
 `DataGrid<R, K extends React.Key = React.Key>`, where `R` is the row type and `K` the row key type.
 
-| Prop                         | Type                                                                       | Description                                                                                                |
-| ---------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `columns`                    | `readonly Column<R>[]`                                                     | Column definitions. Memoize them, or define them outside the component                                     |
-| `rows`                       | `readonly R[]`                                                             | Rows, of any type                                                                                          |
-| `rowKeyGetter`               | `(row: R) => K`                                                            | Returns a unique key for each row, used as the React key of rows                                           |
-| `ref`                        | `React.Ref<DataGridHandle>`                                                | See [`DataGridHandle`](#datagridhandle)                                                                    |
-| `rowHeight`                  | `number \| ((row: R) => number)`                                           | Row height in pixels, `30` by default                                                                      |
-| `headerRowHeight`            | `number`                                                                   | Header row height in pixels, `32` by default                                                               |
-| `columnWidths`               | `ColumnWidths`                                                             | The widths of the columns resized by the user, to control them                                             |
-| `onColumnWidthsChange`       | `(columnWidths: ColumnWidths) => void`                                     | Called when a resize ends                                                                                  |
-| `onColumnResize`             | `(column: CalculatedColumn<R>, width: number) => void`                     | Called while a column is resized                                                                           |
-| `sortColumns`                | `readonly SortColumn[]`                                                    | The sorted columns                                                                                         |
-| `onSortColumnsChange`        | `(sortColumns: SortColumn[]) => void`                                      | Called by `onSort`                                                                                         |
-| `defaultColumnOptions`       | `DefaultColumnOptions<R>`                                                  | `width`, `minWidth`, `maxWidth`, `resizable`, `sortable`, `renderCell`, `renderHeaderCell` for all columns |
-| `cellSelection`              | `CellSelection`                                                            | The selected ranges, to control the selection                                                              |
-| `onCellSelectionChange`      | `(cellSelection: CellSelection) => void`                                   | Called when the selection changes                                                                          |
-| `onCellSelectionContextMenu` | `(args: CellSelectionContextMenuArgs<R>, event: React.MouseEvent) => void` | Called on right-click, see [Context Menu](#context-menu)                                                   |
-| `onCellClick`                | `(args: CellMouseArgs<R>, event: CellMouseEvent) => void`                  | Called when a cell is clicked                                                                              |
-| `onCellDoubleClick`          | `(args: CellMouseArgs<R>, event: CellMouseEvent) => void`                  | Called when a cell is double-clicked                                                                       |
-| `onCellKeyDown`              | `(args: CellKeyDownArgs<R>, event: CellKeyboardEvent) => void`             | Called when a key is pressed in a cell, call `event.preventGridDefault()` to skip the navigation           |
-| `onActivePositionChange`     | `(args: PositionChangeArgs<R>) => void`                                    | Called when the active cell changes                                                                        |
-| `onScroll`                   | `React.UIEventHandler<HTMLDivElement>`                                     | Called when the grid scrolls, to load more rows for example                                                |
-| `enableVirtualization`       | `boolean`                                                                  | Only render the rows in the viewport, `true` by default. The columns are always all rendered               |
-| `renderers`                  | `{ noRowsFallback?: ReactNode }`                                           | Rendered instead of the rows when there are none                                                           |
-| `rowClass`                   | `(row: R, rowIdx: number) => string \| undefined`                          | Class names of rows                                                                                        |
-| `headerRowClass`             | `string`                                                                   | Class names of the header row                                                                              |
-| `className`, `style`         |                                                                            | Applied to the grid                                                                                        |
-| `aria-*`, `data-testid`      |                                                                            | `aria-label`, `aria-labelledby`, `aria-description`, `aria-describedby`, `aria-rowcount`                   |
+| Prop                         | Type                                                                       | Description                                                                                      |
+| ---------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `columns`                    | `readonly Column<R>[]`                                                     | Column definitions. Memoize them, or define them outside the component                           |
+| `rows`                       | `readonly R[]`                                                             | Rows, of any type                                                                                |
+| `rowKeyGetter`               | `(row: R) => K`                                                            | Returns a unique key for each row, used as the React key of rows                                 |
+| `ref`                        | `React.Ref<DataGridHandle>`                                                | See [`DataGridHandle`](#datagridhandle)                                                          |
+| `rowHeight`                  | `number \| ((row: R) => number)`                                           | Row height in pixels, `30` by default                                                            |
+| `headerRowHeight`            | `number`                                                                   | Header row height in pixels, `32` by default                                                     |
+| `columnWidths`               | `ColumnWidths`                                                             | The widths of the columns resized by the user, to control them                                   |
+| `onColumnWidthsChange`       | `(columnWidths: ColumnWidths) => void`                                     | Called when a resize ends                                                                        |
+| `onColumnResize`             | `(column: CalculatedColumn<R>, width: number) => void`                     | Called while a column is resized                                                                 |
+| `sortColumns`                | `readonly SortColumn[]`                                                    | The sorted columns                                                                               |
+| `onSortColumnsChange`        | `(sortColumns: SortColumn[]) => void`                                      | Called by `onSort`                                                                               |
+| `defaultColumnOptions`       | `DefaultColumnOptions<R>`                                                  | `width`, `minWidth`, `maxWidth`, `resizable`, `renderCell`, `renderHeaderCell` for all columns   |
+| `cellSelection`              | `CellSelection`                                                            | The selected ranges, to control the selection                                                    |
+| `onCellSelectionChange`      | `(cellSelection: CellSelection) => void`                                   | Called when the selection changes                                                                |
+| `onCellSelectionContextMenu` | `(args: CellSelectionContextMenuArgs<R>, event: React.MouseEvent) => void` | Called on right-click, see [Context Menu](#context-menu)                                         |
+| `onCellClick`                | `(args: CellMouseArgs<R>, event: CellMouseEvent) => void`                  | Called when a cell is clicked                                                                    |
+| `onCellDoubleClick`          | `(args: CellMouseArgs<R>, event: CellMouseEvent) => void`                  | Called when a cell is double-clicked                                                             |
+| `onCellKeyDown`              | `(args: CellKeyDownArgs<R>, event: CellKeyboardEvent) => void`             | Called when a key is pressed in a cell, call `event.preventGridDefault()` to skip the navigation |
+| `onActivePositionChange`     | `(args: PositionChangeArgs<R>) => void`                                    | Called when the active cell changes                                                              |
+| `onScroll`                   | `React.UIEventHandler<HTMLDivElement>`                                     | Called when the grid scrolls, to load more rows for example                                      |
+| `enableVirtualization`       | `boolean`                                                                  | Only render the rows in the viewport, `true` by default. The columns are always all rendered     |
+| `renderers`                  | `{ noRowsFallback?: ReactNode }`                                           | Rendered instead of the rows when there are none                                                 |
+| `rowClass`                   | `(row: R, rowIdx: number) => string \| undefined`                          | Class names of rows                                                                              |
+| `headerRowClass`             | `string`                                                                   | Class names of the header row                                                                    |
+| `className`, `style`         |                                                                            | Applied to the grid                                                                              |
+| `aria-*`, `data-testid`      |                                                                            | `aria-label`, `aria-labelledby`, `aria-description`, `aria-describedby`, `aria-rowcount`         |
 
 `CellMouseArgs<R>` is `{ column, row, rowIdx }`. `CellMouseEvent` and `CellKeyboardEvent` are React events with `preventGridDefault()` and `isGridDefaultPrevented()`.
 
@@ -341,7 +339,6 @@ The styles are not in cascade layers, so your rules override them when their sel
 | `maxWidth`            | `number`                                                | Also caps `max-content`, `auto` and `fr` widths, ignored when less than `minWidth` |
 | `frozen`              | `boolean \| 'start' \| 'end'`                           | Keeps the column visible at the start or end edge, `true` is `'start'`             |
 | `resizable`           | `boolean`                                               | Shows a resize handle, a double click auto-sizes the column                        |
-| `sortable`            | `boolean`                                               | Enables `onSort`                                                                   |
 | `sortDescendingFirst` | `boolean`                                               | Sorts descending first                                                             |
 | `renderCell`          | `(props: RenderCellContentProps<R>) => ReactNode`       | Cell content, `row[key]` by default                                                |
 | `renderHeaderCell`    | `(props: RenderHeaderCellContentProps<R>) => ReactNode` | Header cell content                                                                |
@@ -357,7 +354,7 @@ The styles are not in cascade layers, so your rules override them when their sel
 - `DataGrid`, `RowHeaderColumn`, `ROW_HEADER_COLUMN_KEY`
 - `getSelectedCellsText`
 - `renderValue`, the default cell content, and `renderHeaderCell`, the default header cell content
-- `renderSortIcon({ sortDirection })` and `renderSortPriority({ priority })`, for sortable header cells
+- `renderSortIcon({ sortDirection })` and `renderSortPriority({ priority })`, for the sort status in header cells
 - The types used above
 
 ## Development

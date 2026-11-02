@@ -20,7 +20,7 @@ const headerSortName = css`
 const headerSortNameClassname = `rdg-header-sort-name ${headerSortName}`;
 
 /**
- * The default header cell content: the column name, and the sort status of sortable columns.
+ * The default header cell content: the column name, and the sort status when the column is sorted.
  * It doesn't sort the column: render a control that calls `onSort` to sort it.
  */
 export function renderHeaderCell<R>({
@@ -28,7 +28,7 @@ export function renderHeaderCell<R>({
   sortDirection,
   priority
 }: RenderHeaderCellContentProps<R>) {
-  if (!column.sortable) return column.name;
+  if (sortDirection === undefined) return column.name;
 
   return (
     <span className={headerSortCellClassname}>

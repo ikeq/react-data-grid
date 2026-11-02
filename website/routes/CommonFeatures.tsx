@@ -212,7 +212,6 @@ function CommonFeatures() {
       columns={columns}
       rows={sortedRows}
       defaultColumnOptions={{
-        sortable: true,
         renderHeaderCell: renderSortableHeaderCell,
         resizable: true
       }}

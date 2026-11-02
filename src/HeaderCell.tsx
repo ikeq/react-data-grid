@@ -92,7 +92,7 @@ export default function HeaderCell<R>({
   // Clicking the header cell selects the column, so sorting is triggered by controls rendered in the header cell,
   // for example a sort button with `onClick={onSort}`, `onSort` being passed to `renderHeaderCell`
   function onSort(event?: SortEvent) {
-    if (!column.sortable || onSortColumnsChange == null) return;
+    if (onSortColumnsChange == null) return;
     // Ctrl/Cmd + click adds the column to the sorted columns
     const multiSort = event != null && (event.ctrlKey || event.metaKey);
     const { sortDescendingFirst } = column;

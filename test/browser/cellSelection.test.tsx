@@ -19,7 +19,7 @@ interface Row {
 
 const columns: readonly Column<Row>[] = [
   RowHeaderColumn,
-  { key: 'a', name: 'A', sortable: true },
+  { key: 'a', name: 'A' },
   { key: 'b', name: 'B' },
   { key: 'c', name: 'C' }
 ];
@@ -236,7 +236,6 @@ test('controls in header cells sort with onSort, without selecting the column', 
     {
       key: 'a',
       name: 'A',
-      sortable: true,
       renderHeaderCell({ column, sortDirection, onSort, tabIndex }) {
         return (
           <button type="button" tabIndex={tabIndex} onClick={onSort}>
@@ -245,7 +244,7 @@ test('controls in header cells sort with onSort, without selecting the column', 
         );
       }
     },
-    { key: 'b', name: 'B', sortable: true }
+    { key: 'b', name: 'B' }
   ];
   const { onCellSelectionChange } = await setup({
     columns: sortableColumns,

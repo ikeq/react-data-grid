@@ -15,9 +15,12 @@ export const RowHeaderColumn: Column<any> = {
   width: 'max-content',
   minWidth: 0,
   resizable: false,
-  sortable: false,
   frozen: true,
   cellClass: rowHeaderCellClassname,
+  // its header cell has no content, even when `defaultColumnOptions.renderHeaderCell` is set
+  renderHeaderCell() {
+    return null;
+  },
   renderCell({ rowIdx }) {
     return rowIdx + 1;
   }
