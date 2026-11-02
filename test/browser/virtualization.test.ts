@@ -95,33 +95,34 @@ test('virtualization is enabled', async () => {
 
   // the rows are virtualized, the columns are all rendered
   await assertHeaderCells(30, 0, 29);
-  await assertRows(34, 0, 33);
+  // 10 rows are rendered above and below the visible rows
+  await assertRows(40, 0, 39);
   await assertCells(0, 30, 0, 29);
-  scrollGrid({ top: 244 });
-  await assertRows(39, 2, 40);
+  scrollGrid({ top: 384 });
+  await assertRows(51, 0, 50);
 
-  scrollGrid({ top: 245 });
-  await assertRows(38, 3, 40);
+  scrollGrid({ top: 385 });
+  await assertRows(50, 1, 50);
 
   scrollGrid({ top: 419 });
-  await assertRows(39, 7, 45);
+  await assertRows(51, 1, 51);
 
   scrollGrid({ top: 420 });
-  await assertRows(38, 8, 45);
+  await assertRows(50, 2, 51);
 
   scrollGrid({ top: 524 });
-  await assertRows(39, 10, 48);
+  await assertRows(51, 4, 54);
 
   scrollGrid({ top: 525 });
-  await assertRows(38, 11, 48);
+  await assertRows(50, 5, 54);
 
   scrollGrid({ top: 1000 });
-  await assertRows(39, 24, 62);
+  await assertRows(51, 18, 68);
 
   // scroll height = header height + row height * row count
   // max top = scroll height - grid height
   scrollGrid({ top: rowHeight + rowHeight * 100 - 1080 });
-  await assertRows(34, 66, 99);
+  await assertRows(40, 60, 99);
 
   // scrolling horizontally doesn't change the rendered columns
   // max left = row width - grid width
@@ -148,7 +149,7 @@ test('zero columns', async () => {
 
   await expect.element(headerCells).toHaveLength(0);
   await expect.element(cells).toHaveLength(0);
-  await expect.element(rows).toHaveLength(34);
+  await expect.element(rows).toHaveLength(40);
 });
 
 test('zero rows', async () => {

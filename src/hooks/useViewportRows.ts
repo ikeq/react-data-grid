@@ -111,7 +111,8 @@ export function useViewportRows<R>({
   let rowOverscanEndIdx = rows.length - 1;
 
   if (enableVirtualization) {
-    const overscanThreshold = 4;
+    // the rows rendered above and below the viewport, so fast scrolling doesn't show empty rows
+    const overscanThreshold = 10;
     const rowVisibleStartIdx = findRowIdx(scrollTop);
     const rowVisibleEndIdx = findRowIdx(scrollTop + clientHeight);
     rowOverscanStartIdx = max(0, rowVisibleStartIdx - overscanThreshold);
