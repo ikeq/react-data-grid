@@ -8,8 +8,11 @@ declare global {
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
-    dragFill: (from: string, to: string) => Promise<void>;
-    resizeColumn: (name: string, resizeBy: number | readonly number[]) => Promise<void>;
+    resizeColumn: (
+      name: string,
+      resizeBy: number | readonly number[],
+      resizeHandleSelector: string
+    ) => Promise<void>;
   }
 }
 

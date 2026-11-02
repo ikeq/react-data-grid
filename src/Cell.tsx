@@ -13,7 +13,11 @@ import {
 } from './utils';
 import type { CellMouseEventHandler, RenderCellProps } from './types';
 import {
+  cellRangeEdgeBottomClassname,
   cellRangeEdgeClassname,
+  cellRangeEdgeEndClassname,
+  cellRangeEdgeStartClassname,
+  cellRangeEdgeTopClassname,
   cellRangeSelectedClassname,
   headerCellRangeSelectedClassname
 } from './style/cell';
@@ -52,10 +56,10 @@ function Cell<R>({
     column,
     selectedClassname,
     cellSelectionEdges !== 0 && cellRangeEdgeClassname,
-    (cellSelectionEdges & CELL_SELECTION_EDGE_TOP) !== 0 && 'rdg-cell-range-edge-top',
-    (cellSelectionEdges & CELL_SELECTION_EDGE_BOTTOM) !== 0 && 'rdg-cell-range-edge-bottom',
-    (cellSelectionEdges & CELL_SELECTION_EDGE_START) !== 0 && 'rdg-cell-range-edge-start',
-    (cellSelectionEdges & CELL_SELECTION_EDGE_END) !== 0 && 'rdg-cell-range-edge-end',
+    (cellSelectionEdges & CELL_SELECTION_EDGE_TOP) !== 0 && cellRangeEdgeTopClassname,
+    (cellSelectionEdges & CELL_SELECTION_EDGE_BOTTOM) !== 0 && cellRangeEdgeBottomClassname,
+    (cellSelectionEdges & CELL_SELECTION_EDGE_START) !== 0 && cellRangeEdgeStartClassname,
+    (cellSelectionEdges & CELL_SELECTION_EDGE_END) !== 0 && cellRangeEdgeEndClassname,
     typeof cellClass === 'function' ? cellClass(row) : cellClass,
     className
   );

@@ -228,16 +228,18 @@ Controls in cells and header cells receive the focus when their cell is active, 
 
 ### Themes
 
-The grid follows `color-scheme`. Set it on `:root`, or add the `rdg-light` or `rdg-dark` class to a grid:
+The grid follows `color-scheme`. Set it on `:root`, or on a grid with `className` or `style`:
 
 ```tsx
-<DataGrid className="rdg-dark" columns={columns} rows={rows} />
+<DataGrid style={{ colorScheme: 'dark' }} columns={columns} rows={rows} />
 ```
 
 ### CSS Variables
 
+Set the variables on a class passed to `className`, or with `style`:
+
 ```css
-.rdg {
+.my-grid {
   --rdg-font-size: 12px;
   /* the text of the data cells */
   --rdg-color: light-dark(#888, #ddd);
@@ -275,6 +277,8 @@ The grid follows `color-scheme`. Set it on `:root`, or add the `rdg-light` or `r
 The styles are not in cascade layers, so your rules override them when their selectors are at least as specific, and come after `styles.css`.
 
 ### Classes
+
+The grid's class names are generated and change between versions, so they can't be used as selectors. Style the grid with the CSS variables, the class names below, and the ARIA roles and attributes, like `[role="gridcell"][aria-selected="true"]` for the active cell.
 
 - `className` and `style` apply to the grid.
 - `rowClass(row, rowIdx)` and `headerRowClass` apply to rows.

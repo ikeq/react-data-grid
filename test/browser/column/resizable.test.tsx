@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { commands, page, server, userEvent } from 'vite-plus/test/browser';
 
 import { DataGrid, type Column, type ColumnWidth, type ColumnWidths } from '../../../src';
+import { resizeHandleClassname } from '../../../src/style/cell';
 import { setup } from '../utils';
 
 const grid = page.getGrid();
@@ -16,13 +17,13 @@ interface Row {
 }
 
 function getResizeHandle(name: string) {
-  return page.getHeaderCell({ name }).getBySelector('.rdg-resize-handle');
+  return page.getHeaderCell({ name }).getBySelector(`.${resizeHandleClassname}`);
 }
 
 async function resize(columnName: string, resizeBy: number | readonly number[]) {
   await expect.element(getResizeHandle(columnName)).toBeInTheDocument();
 
-  await commands.resizeColumn(columnName, resizeBy);
+  await commands.resizeColumn(columnName, resizeBy, `.${resizeHandleClassname}`);
 }
 
 async function autoResize(columnName: string) {

@@ -1,6 +1,6 @@
 import { css } from 'ecij';
 
-const root = css`
+export const rootClassname = css`
   @layer rdg.Defaults {
     *,
     *::before,
@@ -52,5 +52,3 @@ const root = css`
     }
   }
 `;
-
-export const rootClassname = `rdg ${root}`;

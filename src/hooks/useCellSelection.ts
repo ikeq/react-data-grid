@@ -28,6 +28,7 @@ import type {
   SelectedCells
 } from '../types';
 import { useLatestFunc } from './useLatestFunc';
+import { resizeHandleClassname } from '../style/cell';
 
 type SelectionMode = 'CELL' | 'ROW' | 'COLUMN';
 
@@ -392,7 +393,9 @@ export function useCellSelection<R>({
     event: React.MouseEvent<HTMLDivElement>
   ) {
     if (event.button !== 0 || rows.length === 0) return;
-    if (isElement(event.target) && event.target.closest('.rdg-resize-handle') !== null) return;
+    if (isElement(event.target) && event.target.closest(`.${resizeHandleClassname}`) !== null) {
+      return;
+    }
 
     if (column.key === ROW_HEADER_COLUMN_KEY) {
       stopSelecting();

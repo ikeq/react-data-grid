@@ -16,7 +16,7 @@ const rootClassname = css`
   block-size: 100%;
   gap: 10px;
 
-  > .rdg {
+  > [role='grid'] {
     flex: 1;
   }
 `;

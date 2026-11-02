@@ -46,7 +46,7 @@ import type {
 } from './types';
 import HeaderRow from './HeaderRow';
 import Row from './Row';
-import { cellSelectingClassname } from './style/cell';
+import { cellClassname, cellSelectingClassname } from './style/cell';
 import { rootClassname } from './style/core';
 
 export type DefaultColumnOptions<R> = Pick<
@@ -471,7 +471,7 @@ export function DataGrid<R, K extends Key = Key>(props: DataGridProps<R, K>) {
     }
 
     const { target } = event;
-    if (!isElement(target) || target.closest('.rdg-cell') === null) return;
+    if (!isElement(target) || target.closest(`.${cellClassname}`) === null) return;
 
     if (
       isCtrlKeyHeldDown(event) &&

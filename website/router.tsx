@@ -14,7 +14,7 @@ export const router = createRouter({
   defaultPreload: 'intent',
   defaultStructuralSharing: true,
   scrollRestoration: true,
-  scrollToTopSelectors: ['.rdg']
+  scrollToTopSelectors: ["[role='grid']"]
 });
 
 // Register the router instance for type safety

@@ -2,6 +2,7 @@ import { page, userEvent } from 'vite-plus/test/browser';
 
 import { DataGrid, RowHeaderColumn } from '../../src';
 import type { Column } from '../../src';
+import { cellRangeEdgeClassname } from '../../src/style/cell';
 
 interface Row {
   id: number;
@@ -55,7 +56,7 @@ test('rows are striped, starting with the first row', async () => {
   expect(getComputedStyle(row3).backgroundColor).toBe(stripe);
 });
 
-test('every frozen cell has a line on its side facing the scrolling columns, and no shadow', async () => {
+test('every frozen cell has a line on its side facing the scrolling columns', async () => {
   const frozenColumns: readonly Column<Row>[] = [
     { key: 's1', name: 'S1', frozen: 'start' },
     { key: 's2', name: 'S2', frozen: 'start' },
@@ -85,15 +86,13 @@ test('every frozen cell has a line on its side facing the scrolling columns, and
   expect(getComputedStyle(e2).borderInlineStartWidth).toBe('1px');
   // the grid's outer edges have no line
   expect(getComputedStyle(e2).borderInlineEndWidth).toBe('0px');
-
-  expect(page.getGrid().element().querySelector('.rdg-frozen-column-shadow')).toBeNull();
 });
 
 test('the selection border is 1px wide', async () => {
   await page.render(<DataGrid columns={columns} rows={rows} />);
   const cell = page.getCell({ name: '1', exact: true });
   await userEvent.click(cell);
-  await expect.element(cell).toHaveClass('rdg-cell-range-edge');
+  await expect.element(cell).toHaveClass(cellRangeEdgeClassname);
   expect(getComputedStyle(cell.element(), '::after').borderTopWidth).toBe('1px');
 });
 

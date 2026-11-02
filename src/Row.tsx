@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { classnames, getCellSelectionEdges, ROW_HEADER_COLUMN_KEY } from './utils';
 import type { RenderRowProps } from './types';
 import Cell from './Cell';
-import { rowClassname } from './style/row';
+import { rowClassname, rowEvenClassname } from './style/row';
 
 function Row<R>({
   className,
@@ -24,7 +24,7 @@ function Row<R>({
 }: RenderRowProps<R>) {
   className = classnames(
     rowClassname,
-    `rdg-row-${rowIdx % 2 === 0 ? 'even' : 'odd'}`,
+    rowIdx % 2 === 0 && rowEvenClassname,
     rowClass?.(row, rowIdx),
     className
   );

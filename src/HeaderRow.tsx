@@ -12,7 +12,7 @@ import type {
 } from './types';
 import type { DataGridProps } from './DataGrid';
 import HeaderCell from './HeaderCell';
-import { cell, cellFrozenBase } from './style/cell';
+import { cellClassname, cellFrozenEndClassname, cellFrozenStartClassname } from './style/cell';
 
 type SharedDataGridProps<R, K extends React.Key> = Pick<
   DataGridProps<R, K>,
@@ -38,27 +38,25 @@ export interface HeaderRowProps<R, K extends React.Key> extends SharedDataGridPr
   ) => void;
 }
 
-const headerRow = css`
+export const headerRowClassname = css`
   @layer rdg.HeaderRow {
     display: contents;
     background-color: var(--rdg-header-background-color);
     color: var(--rdg-header-color);
     font-weight: bold;
 
-    & > .${cell} {
+    & > .${cellClassname} {
       /* Should have a higher value than 1 to show up above regular cells and the focus sink */
       z-index: 2;
       position: sticky;
       border-block-end: var(--rdg-border-width) solid var(--rdg-border-color);
     }
 
-    & > .${cellFrozenBase} {
+    & > :is(.${cellFrozenStartClassname}, .${cellFrozenEndClassname}) {
       z-index: 3;
     }
   }
 `;
-
-export const headerRowClassname = `rdg-header-row ${headerRow}`;
 
 function HeaderRow<R, K extends React.Key>({
   headerRowClass,

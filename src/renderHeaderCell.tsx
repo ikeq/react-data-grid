@@ -9,15 +9,13 @@ const headerSortCellClassname = css`
   }
 `;
 
-const headerSortName = css`
+export const headerSortNameClassname = css`
   @layer rdg.SortableHeaderCellName {
     flex-grow: 1;
     overflow: clip;
     text-overflow: ellipsis;
   }
 `;
-
-const headerSortNameClassname = `rdg-header-sort-name ${headerSortName}`;
 
 /**
  * The default header cell content: the column name, and the sort status when the column is sorted.

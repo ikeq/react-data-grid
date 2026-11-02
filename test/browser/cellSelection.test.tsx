@@ -9,6 +9,15 @@ import type {
   DataGridProps,
   SortColumn
 } from '../../src';
+import {
+  cellRangeEdgeBottomClassname,
+  cellRangeEdgeClassname,
+  cellRangeEdgeEndClassname,
+  cellRangeEdgeStartClassname,
+  cellRangeEdgeTopClassname,
+  cellRangeSelectedClassname,
+  headerCellRangeSelectedClassname
+} from '../../src/style/cell';
 
 interface Row {
   readonly id: number;
@@ -31,8 +40,8 @@ const initialRows: readonly Row[] = Array.from({ length: 10 }, (_, id) => ({
   c: `c${id}`
 }));
 
-const selectedCells = page.getBySelector('.rdg-cell-range-selected');
-const selectedHeaderCells = page.getBySelector('.rdg-header-cell-range-selected');
+const selectedCells = page.getBySelector(`.${cellRangeSelectedClassname}`);
+const selectedHeaderCells = page.getBySelector(`.${headerCellRangeSelectedClassname}`);
 const isMac = navigator.platform.startsWith('Mac');
 const ctrlKey = isMac ? 'Meta' : 'Control';
 
@@ -47,7 +56,7 @@ function getRowHeaderCell(rowIdx: number) {
 async function testSelectedCells(names: readonly string[]) {
   await expect.element(selectedCells).toHaveLength(names.length);
   for (const name of names) {
-    await expect.element(getCell(name)).toHaveClass('rdg-cell-range-selected');
+    await expect.element(getCell(name)).toHaveClass(cellRangeSelectedClassname);
   }
 }
 
@@ -93,16 +102,47 @@ test('dragging selects a range of cells', async () => {
   await expect.element(selectedHeaderCells).toHaveLength(5);
 });
 
+const edgeClassnames = {
+  top: cellRangeEdgeTopClassname,
+  bottom: cellRangeEdgeBottomClassname,
+  start: cellRangeEdgeStartClassname,
+  end: cellRangeEdgeEndClassname
+} as const;
+
 async function testEdges(name: string, edges: readonly ('top' | 'bottom' | 'start' | 'end')[]) {
   const cell = getCell(name);
   for (const edge of ['top', 'bottom', 'start', 'end'] as const) {
     if (edges.includes(edge)) {
-      await expect.element(cell).toHaveClass(`rdg-cell-range-edge-${edge}`);
+      await expect.element(cell).toHaveClass(edgeClassnames[edge]);
     } else {
-      await expect.element(cell).not.toHaveClass(`rdg-cell-range-edge-${edge}`);
+      await expect.element(cell).not.toHaveClass(edgeClassnames[edge]);
     }
   }
 }
+
+test('selected cells and row header cells have their own background', async () => {
+  // the variants of the cells have one class like the cells, so they must come after the cells' styles
+  const style: React.CSSProperties & Record<`--${string}`, string> = {
+    '--rdg-background-color': 'rgb(1, 1, 1)',
+    '--rdg-row-stripe-background-color': 'rgb(2, 2, 2)',
+    '--rdg-cell-selection-background-color': 'rgb(3, 3, 3)',
+    '--rdg-header-background-color': 'rgb(4, 4, 4)',
+    '--rdg-header-selection-background-color': 'rgb(5, 5, 5)'
+  };
+  await setup({ style });
+  await userEvent.dragAndDrop(getCell('a1'), getCell('b2'));
+
+  function getBackgroundColor(cell: ReturnType<typeof getCell>) {
+    return getComputedStyle(cell.element()).backgroundColor;
+  }
+
+  await expect.poll(() => getBackgroundColor(getCell('a1'))).toBe('rgb(3, 3, 3)');
+  // the row with rowIdx 0 is a stripe
+  expect(getBackgroundColor(getCell('a0'))).toBe('rgb(2, 2, 2)');
+  expect(getBackgroundColor(getCell('a3'))).toBe('rgb(1, 1, 1)');
+  expect(getBackgroundColor(getRowHeaderCell(3))).toBe('rgb(4, 4, 4)');
+  expect(getBackgroundColor(getRowHeaderCell(1))).toBe('rgb(5, 5, 5)');
+});
 
 test('the border is drawn around each range', async () => {
   await setup();
@@ -112,19 +152,19 @@ test('the border is drawn around each range', async () => {
   await testEdges('c1', ['top', 'end']);
   await testEdges('a2', ['start']);
   await testEdges('b2', []);
-  await expect.element(getCell('b2')).not.toHaveClass('rdg-cell-range-edge');
+  await expect.element(getCell('b2')).not.toHaveClass(cellRangeEdgeClassname);
   await testEdges('c3', ['bottom', 'end']);
 
   // the border of a range of rows starts after the row header column
   await userEvent.click(getRowHeaderCell(5));
   await testEdges('a5', ['top', 'bottom', 'start']);
   await testEdges('c5', ['top', 'bottom', 'end']);
-  await expect.element(getRowHeaderCell(5)).not.toHaveClass('rdg-cell-range-edge');
+  await expect.element(getRowHeaderCell(5)).not.toHaveClass(cellRangeEdgeClassname);
 
   // a single cell has the border on every edge
   await userEvent.click(getCell('b7'));
   await testEdges('b7', ['top', 'bottom', 'start', 'end']);
-  await expect.element(page.getBySelector('.rdg-cell-range-edge')).toHaveLength(1);
+  await expect.element(page.getBySelector(`.${cellRangeEdgeClassname}`)).toHaveLength(1);
 });
 
 function getActiveBoxContent(element: Element) {
@@ -145,7 +185,7 @@ test('the active cell box is only drawn outside of the cell selection', async ()
   // the cell selection draws the active cell with its background and border
   await userEvent.click(getCell('b1'));
   await expect.element(getCell('b1')).toHaveAttribute('aria-selected', 'true');
-  await expect.element(getCell('b1')).toHaveClass('rdg-cell-range-selected');
+  await expect.element(getCell('b1')).toHaveClass(cellRangeSelectedClassname);
   expect(getActiveBoxContent(getCell('b1').element())).toBe('none');
 
   // the box is a focus indicator when navigating to a header cell with the keyboard
@@ -165,8 +205,8 @@ test('clicking a cell selects it, and highlights its row header cell and header 
   await expect.element(selectedHeaderCells).toHaveLength(2);
   await expect
     .element(page.getHeaderCell({ name: 'B' }))
-    .toHaveClass('rdg-header-cell-range-selected');
-  await expect.element(getRowHeaderCell(2)).toHaveClass('rdg-header-cell-range-selected');
+    .toHaveClass(headerCellRangeSelectedClassname);
+  await expect.element(getRowHeaderCell(2)).toHaveClass(headerCellRangeSelectedClassname);
 });
 
 test('Shift + click extends the selection, and Ctrl/Cmd + click adds a range', async () => {
@@ -200,7 +240,7 @@ test('row header cells select whole rows', async () => {
   const { onCellSelectionChange } = await setup();
   await userEvent.click(getRowHeaderCell(2));
   await testSelectedCells(['a2', 'b2', 'c2']);
-  await expect.element(getRowHeaderCell(2)).toHaveClass('rdg-header-cell-range-selected');
+  await expect.element(getRowHeaderCell(2)).toHaveClass(headerCellRangeSelectedClassname);
 
   await userEvent.dragAndDrop(getRowHeaderCell(4), getRowHeaderCell(5));
   await testSelectedCells(['a4', 'b4', 'c4', 'a5', 'b5', 'c5']);
@@ -217,8 +257,8 @@ test('header cells select whole columns, and do not sort', async () => {
   expect(onCellSelectionChange).toHaveBeenLastCalledWith([
     { startIdx: 1, endIdx: 1, startRowIdx: 0, endRowIdx: 9 }
   ]);
-  await expect.element(headerCell).toHaveClass('rdg-header-cell-range-selected');
-  await expect.element(getCell('a0')).toHaveClass('rdg-cell-range-selected');
+  await expect.element(headerCell).toHaveClass(headerCellRangeSelectedClassname);
+  await expect.element(getCell('a0')).toHaveClass(cellRangeSelectedClassname);
 
   await clickWith('Shift', page.getHeaderCell({ name: 'C' }));
   expect(onCellSelectionChange).toHaveBeenLastCalledWith([

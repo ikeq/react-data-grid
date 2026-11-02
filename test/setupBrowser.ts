@@ -10,6 +10,9 @@ import {
 } from 'vite-plus/test/browser';
 import { configure } from 'vitest-browser-react/pure';
 
+import { headerRowClassname } from '../src/HeaderRow';
+import { rowClassname } from '../src/style/row';
+
 // avoid printing huge stack traces
 // Chromium defaults to 10
 // Firefox defaults to 128
@@ -39,7 +42,7 @@ locators.extend({
   },
 
   getHeaderRow(opts?: LocatorByRoleOptions) {
-    return this.getByRole('row', opts).and(this.getBySelector('.rdg-header-row'));
+    return this.getByRole('row', opts).and(this.getBySelector(`.${headerRowClassname}`));
   },
 
   getHeaderCell(opts?: LocatorByRoleOptions) {
@@ -47,7 +50,7 @@ locators.extend({
   },
 
   getRow(opts?: LocatorByRoleOptions) {
-    return this.getByRole('row', opts).and(this.getBySelector('.rdg-row'));
+    return this.getByRole('row', opts).and(this.getBySelector(`.${rowClassname}`));
   },
 
   getCell(opts?: LocatorByRoleOptions) {

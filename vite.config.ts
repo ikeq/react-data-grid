@@ -14,14 +14,16 @@ const isAgent = process.env.AI_AGENT !== undefined;
 const isWindows = process.platform === 'win32';
 
 // TODO: remove when `userEvent.pointer` is supported
+// the grid only has generated class names, so the test passes the resize handle's selector
 async function resizeColumn(
   { page, iframe }: BrowserCommandContext,
   name: string,
-  resizeBy: number | readonly number[]
+  resizeBy: number | readonly number[],
+  resizeHandleSelector: string
 ) {
   const resizeHandle = iframe
     .getByRole('columnheader', { name, exact: true })
-    .locator('.rdg-resize-handle');
+    .locator(resizeHandleSelector);
   const { x, y } = (await resizeHandle.boundingBox())!;
   await page.mouse.move(x + 5, y + 5);
   await page.mouse.down();
@@ -31,18 +33,6 @@ async function resizeColumn(
     newX += value;
     await page.mouse.move(newX, y + 5);
   }
-  await page.mouse.up();
-}
-
-// TODO: remove when `userEvent.pointer` is supported
-async function dragFill({ page, iframe }: BrowserCommandContext, from: string, to: string) {
-  await iframe.getByRole('gridcell', { name: from, exact: true }).click();
-  await iframe.locator('.rdg-cell-drag-handle').hover();
-  await page.mouse.down();
-  const target = iframe.getByRole('gridcell', { name: to, exact: true });
-  await target.hover();
-  // the grid fills the cells it rendered as dragged over, so wait for it to render the drag
-  await target.and(iframe.locator('.rdg-cell-dragged-over')).waitFor();
   await page.mouse.up();
 }
 
@@ -106,13 +96,10 @@ const firefoxProvider = playwright({
 });
 // Firefox sends the mouse events of all its pages with the same pointer ID,
 // so a page that captures the pointer also receives the other pages' mouse events.
-// These tests drag a resize or drag-fill handle, which captures the pointer,
+// These tests drag a resize handle, which captures the pointer,
 // so each of them runs in a browser of its own.
 // https://github.com/microsoft/playwright/issues/43631
-const firefoxPointerCaptureTests = [
-  'browser/dragFill.test.tsx',
-  'browser/column/resizable.test.tsx'
-];
+const firefoxPointerCaptureTests = ['browser/column/resizable.test.tsx'];
 
 export default defineConfig({
   staged: {
@@ -324,7 +311,7 @@ export default defineConfig({
       headless: true,
       ui: false,
       viewport,
-      commands: { resizeColumn, dragFill },
+      commands: { resizeColumn },
       expect: {
         toMatchScreenshot: {
           screenshotDirectory: 'screenshots'

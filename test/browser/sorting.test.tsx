@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { page, userEvent } from 'vite-plus/test/browser';
 
 import { DataGrid, renderHeaderCell, type Column, type SortColumn } from '../../src';
+import { headerSortNameClassname } from '../../src/renderHeaderCell';
 
 const columns: readonly Column<never>[] = [
   { key: 'colA', name: 'colA' },
@@ -67,10 +68,14 @@ test('every column can be sorted with onSort', async () => {
 test('the default header cell content only shows the sort status of sorted columns', async () => {
   await setup();
   const headerCell = page.getHeaderCell({ name: 'colA', exact: false });
-  await expect.element(headerCell.getBySelector('.rdg-header-sort-name')).not.toBeInTheDocument();
+  await expect
+    .element(headerCell.getBySelector(`.${headerSortNameClassname}`))
+    .not.toBeInTheDocument();
   await userEvent.click(getSortButton('colA'));
-  await expect.element(headerCell.getBySelector('.rdg-header-sort-name')).toHaveTextContent('colA');
-  await expect.element(headerCell.getBySelector('.rdg-sort-arrow')).toBeInTheDocument();
+  await expect
+    .element(headerCell.getBySelector(`.${headerSortNameClassname}`))
+    .toHaveTextContent('colA');
+  await expect.element(headerCell.getBySelector('svg')).toBeInTheDocument();
 });
 
 test('single column sort', async () => {
@@ -98,9 +103,9 @@ test('multi-column sort', async () => {
   const sortButton1 = getSortButton('colA');
   const sortButton2 = getSortButton('colB');
   const sortButton3 = getSortButton('colC');
-  const priority1 = headerCell1.getBySelector('span:has(> .rdg-sort-arrow)');
-  const priority2 = headerCell2.getBySelector('span:has(> .rdg-sort-arrow)');
-  const priority3 = headerCell3.getBySelector('span:has(> .rdg-sort-arrow)');
+  const priority1 = headerCell1.getBySelector('span:has(> svg)');
+  const priority2 = headerCell2.getBySelector('span:has(> svg)');
+  const priority3 = headerCell3.getBySelector('span:has(> svg)');
   await userEvent.click(sortButton1);
   await userEvent.keyboard(`{${multiSortKey}>}`);
   await userEvent.click(sortButton2);

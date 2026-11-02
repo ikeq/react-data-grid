@@ -1,5 +1,4 @@
 import { useRef } from 'react';
-import { css } from 'ecij';
 
 import { useRovingTabIndex } from './hooks';
 import {
@@ -8,33 +7,15 @@ import {
   getCellStyle,
   isCtrlKeyHeldDown,
   isElement,
-  ROW_HEADER_COLUMN_KEY,
   stopPropagation
 } from './utils';
 import type { CalculatedColumn, SortColumn, SortEvent } from './types';
 import type { HeaderRowProps } from './HeaderRow';
-import { headerCellRangeSelectedClassname, rowHeaderCornerCellClassname } from './style/cell';
-
-const cellResizable = css`
-  @layer rdg.HeaderCell {
-    touch-action: none;
-  }
-`;
-
-const cellResizableClassname = `rdg-cell-resizable ${cellResizable}`;
-
-const resizeHandle = css`
-  @layer rdg.HeaderCell {
-    cursor: col-resize;
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-end: 0;
-    inset-block-end: 0;
-    inline-size: 10px;
-  }
-`;
-
-const resizeHandleClassname = `rdg-resize-handle ${resizeHandle}`;
+import {
+  cellResizableClassname,
+  headerCellRangeSelectedClassname,
+  resizeHandleClassname
+} from './style/cell';
 
 type SharedHeaderRowProps<R> = Pick<
   HeaderRowProps<R, React.Key>,
@@ -83,7 +64,6 @@ export default function HeaderCell<R>({
 
   const className = getCellClassname(
     column,
-    column.key === ROW_HEADER_COLUMN_KEY && rowHeaderCornerCellClassname,
     column.headerCellClass,
     resizable && cellResizableClassname,
     isColumnSelected && headerCellRangeSelectedClassname
