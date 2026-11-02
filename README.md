@@ -254,8 +254,6 @@ Set the variables on a class passed to `className`, or with `style`:
   --rdg-border-color: light-dark(#ddd, #444);
 
   /* rows */
-  /* the hovered data cell */
-  --rdg-cell-hover-background-color: light-dark(hsl(0deg 0% 96%), hsl(0deg 0% 9%));
   /* every other row, starting with the first row, set it to var(--rdg-background-color) to remove the stripes */
   --rdg-row-stripe-background-color: light-dark(hsl(0deg 0% 97.5%), hsl(0deg 0% 15%));
 
@@ -263,13 +261,13 @@ Set the variables on a class passed to `className`, or with `style`:
   --rdg-selection-width: 1px;
   --rdg-selection-color: light-dark(#000, #fff);
 
-  /* the selected cells, and the border around each range */
+  /* the selected cells, and the border around each range and the hovered data cell */
   --rdg-cell-selection-background-color: rgba(0, 0, 0, 0.05);
   --rdg-cell-selection-border-color: var(--rdg-selection-color);
   --rdg-cell-selection-border-width: var(--rdg-selection-width);
 
   /* the header cells of the selected columns, and the row numbers of the selected rows */
-  --rdg-header-selection-background-color: var(--rdg-cell-hover-background-color);
+  --rdg-header-selection-background-color: light-dark(hsl(0deg 0% 96%), hsl(0deg 0% 9%));
   --rdg-header-selection-color: var(--rdg-header-color);
 }
 ```

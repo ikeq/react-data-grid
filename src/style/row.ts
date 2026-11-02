@@ -9,10 +9,18 @@ export const rowClassname = css`
     grid-template: subgrid / subgrid;
     background-color: var(--rdg-background-color);
 
-    /* the hovered data cell, the selected cells and the row numbers keep their own background */
+    /*
+     * The hovered data cell has the border of the selected ranges on every edge, and keeps its background.
+     * The selected cells are not outlined, as the border of their range would surround the hovered cell's,
+     * and neither are the row numbers.
+     */
     & > .${cellClassname}:hover {
-      &:not(.${rowHeaderCellClassname}, .${cellRangeSelectedClassname}) {
-        background-color: var(--rdg-cell-hover-background-color);
+      &:not(.${rowHeaderCellClassname}, .${cellRangeSelectedClassname})::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        border: var(--rdg-cell-selection-border-width) solid var(--rdg-cell-selection-border-color);
       }
     }
   }
@@ -20,7 +28,7 @@ export const rowClassname = css`
 
 /*
  * Zebra stripes, starting with the first row (rowIdx 0).
- * The row's background is replaced through the variable, so hovered and selected cells,
+ * The row's background is replaced through the variable, so selected cells,
  * which set their own background, keep working.
  */
 export const rowEvenClassname = css`

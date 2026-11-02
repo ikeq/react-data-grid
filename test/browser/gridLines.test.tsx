@@ -115,20 +115,45 @@ test('only the line between the header and the data area is drawn', async () => 
   expect(getComputedStyle(dataCell).borderBlockEndWidth).toBe('0px');
 });
 
-test('only the hovered data cell is highlighted, not its row', async () => {
-  await page.render(<DataGrid columns={[RowHeaderColumn, ...columns]} rows={rows} />);
+test('the hovered data cell has the border of the selected ranges, and keeps its background', async () => {
+  const style: React.CSSProperties & Record<`--${string}`, string> = {
+    '--rdg-cell-selection-border-color': 'rgb(9, 9, 9)',
+    '--rdg-cell-selection-background-color': 'rgb(3, 3, 3)'
+  };
+  await page.render(<DataGrid columns={[RowHeaderColumn, ...columns]} rows={rows} style={style} />);
   const row = page.getRow().nth(1).element();
   const [rowHeaderCell, idCell, aCell] = row.querySelectorAll('[role="gridcell"]');
   const rowBackground = getComputedStyle(row).backgroundColor;
   const rowHeaderBackground = getComputedStyle(rowHeaderCell).backgroundColor;
 
-  await userEvent.hover(page.elementLocator(idCell));
-  await expect.poll(() => getComputedStyle(idCell).backgroundColor).not.toBe(rowBackground);
-  expect(getComputedStyle(row).backgroundColor).toBe(rowBackground);
-  expect(getComputedStyle(aCell).backgroundColor).toBe(rowBackground);
+  function getBorderWidths(cell: Element) {
+    const style = getComputedStyle(cell, '::after');
+    if (style.content === 'none') return null;
+    return [
+      style.borderBlockStartWidth,
+      style.borderBlockEndWidth,
+      style.borderInlineStartWidth,
+      style.borderInlineEndWidth
+    ];
+  }
 
-  // the row numbers keep their background
+  await userEvent.hover(page.elementLocator(idCell));
+  await expect.poll(() => getBorderWidths(idCell)).toStrictEqual(['1px', '1px', '1px', '1px']);
+  expect(getComputedStyle(idCell, '::after').borderBlockStartColor).toBe('rgb(9, 9, 9)');
+  expect(getComputedStyle(idCell).backgroundColor).toBe(rowBackground);
+  expect(getBorderWidths(aCell)).toBeNull();
+
+  // the row numbers are not outlined
   await userEvent.hover(page.elementLocator(rowHeaderCell));
-  await expect.poll(() => getComputedStyle(idCell).backgroundColor).toBe(rowBackground);
+  await expect.poll(() => getBorderWidths(idCell)).toBeNull();
+  expect(getBorderWidths(rowHeaderCell)).toBeNull();
   expect(getComputedStyle(rowHeaderCell).backgroundColor).toBe(rowHeaderBackground);
+
+  // the selected cells are not outlined, so the hovered cell's border isn't drawn inside the range's
+  const firstIdCell = page.getRow().nth(0).element().querySelectorAll('[role="gridcell"]')[1];
+  await userEvent.dragAndDrop(page.elementLocator(firstIdCell), page.elementLocator(aCell));
+  await userEvent.hover(page.elementLocator(idCell));
+  // only the edges of the range: the bottom and the start of the range's bottom start cell
+  await expect.poll(() => getBorderWidths(idCell)).toStrictEqual(['0px', '1px', '1px', '0px']);
+  expect(getComputedStyle(idCell).backgroundColor).toBe('rgb(3, 3, 3)');
 });
