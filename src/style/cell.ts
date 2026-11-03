@@ -19,7 +19,7 @@ export const cellClassname = css`
      */
     position: relative; /* needed for absolute positioning to work */
     padding-block: 0;
-    padding-inline: 12px;
+    padding-inline: 0;
     align-content: center;
     background-color: inherit;
 
